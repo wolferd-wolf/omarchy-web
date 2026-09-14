@@ -12,6 +12,12 @@ import {
   HelpCircle,
   Image as ImageIcon,
   Settings,
+  Globe,
+  Disc,
+  Calculator,
+  Gamepad2,
+  Paintbrush,
+  Lock,
 } from "lucide-react";
 import { useWindowStore } from "@/store/windowStore";
 import { useSystemStore } from "@/store/systemStore";
@@ -38,7 +44,7 @@ export const Desktop: React.FC = () => {
     setHotkeysModalOpen,
   } = useWindowStore();
 
-  const { soundEffects } = useSystemStore();
+  const { soundEffects, lockDesktop, nightLight } = useSystemStore();
 
   const [wallpaperIdx, setWallpaperIdx] = useState(0);
   const [contextMenu, setContextMenu] = useState<ContextMenuState>({
@@ -65,8 +71,8 @@ export const Desktop: React.FC = () => {
     if (soundEffects) playTactileClick();
     setContextMenu({
       visible: true,
-      x: Math.min(e.clientX, window.innerWidth - 230),
-      y: Math.min(e.clientY, window.innerHeight - 340),
+      x: Math.min(e.clientX, window.innerWidth - 240),
+      y: Math.min(e.clientY, window.innerHeight - 440),
     });
   };
 
@@ -88,7 +94,9 @@ export const Desktop: React.FC = () => {
   return (
     <main
       onContextMenu={handleContextMenu}
-      className="relative flex-1 w-full h-[calc(100vh-36px)] overflow-hidden select-none desktop-grid"
+      className={`relative flex-1 w-full h-[calc(100vh-36px)] overflow-hidden select-none desktop-grid transition-all duration-300 ${
+        nightLight ? "sepia-[0.25] brightness-95" : ""
+      }`}
       style={{ background: currentWallpaper.gradient }}
     >
       {/* SVG Matte Film-Grain Microtexture Layer */}
@@ -138,7 +146,6 @@ export const Desktop: React.FC = () => {
       )}
 
       {wallpaperIdx === 1 && (
-        /* Obsidian Matrix Vector Grid */
         <svg
           className="absolute inset-0 w-full h-full pointer-events-none opacity-25"
           preserveAspectRatio="none"
@@ -152,7 +159,6 @@ export const Desktop: React.FC = () => {
       )}
 
       {wallpaperIdx === 2 && (
-        /* Tokyo Midnight Skyline Vector */
         <svg
           className="absolute inset-0 w-full h-full pointer-events-none opacity-30"
           preserveAspectRatio="none"
@@ -178,14 +184,15 @@ export const Desktop: React.FC = () => {
             <TilingContainer node={currentWs.tilingRoot} windows={windows} />
           </div>
         ) : (
-          /* When workspace has no windows: clean, undisturbed desktop with a subtle bottom shortcut hint */
           <div className="w-full h-full flex flex-col justify-end items-center pb-6 pointer-events-none">
             <div className="flex items-center space-x-3 px-4 py-1.5 rounded-full waybar-module text-[11px] font-mono-os text-slate-400 pointer-events-auto shadow-xl">
               <span>Super + Enter: Terminal</span>
               <span className="text-white/20">•</span>
+              <span>Super + B: Browser</span>
+              <span className="text-white/20">•</span>
               <span>Super + Space: Launcher</span>
               <span className="text-white/20">•</span>
-              <span>Right-Click: Context Menu</span>
+              <span>Right-Click: Menu</span>
             </div>
           </div>
         )}
@@ -202,7 +209,7 @@ export const Desktop: React.FC = () => {
       {contextMenu.visible && (
         <div
           style={{ top: `${contextMenu.y}px`, left: `${contextMenu.x}px` }}
-          className="fixed z-50 w-56 rounded-xl waybar-module border border-white/10 p-1.5 font-mono-os text-xs text-slate-200 shadow-2xl animate-fade-in"
+          className="fixed z-50 w-60 rounded-xl waybar-module border border-white/10 p-1.5 font-mono-os text-xs text-slate-200 shadow-2xl animate-fade-in"
           onClick={(e) => e.stopPropagation()}
         >
           <div className="px-2.5 py-1 text-[10px] text-slate-500 font-bold uppercase tracking-wider border-b border-white/5 mb-1">
@@ -215,11 +222,11 @@ export const Desktop: React.FC = () => {
               openWindow("terminal");
               setContextMenu((prev) => ({ ...prev, visible: false }));
             }}
-            className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg hover:bg-white/10 text-left transition-colors"
+            className="w-full flex items-center justify-between px-2.5 py-1 rounded-lg hover:bg-white/10 text-left transition-colors"
           >
             <div className="flex items-center space-x-2">
               <Terminal className="w-3.5 h-3.5 text-emerald-400" />
-              <span>New Terminal</span>
+              <span>Terminal</span>
             </div>
             <kbd className="text-[9px] text-slate-500">Super+Enter</kbd>
           </button>
@@ -227,16 +234,16 @@ export const Desktop: React.FC = () => {
           <button
             onClick={() => {
               if (soundEffects) playTactileClick();
-              openWindow("agent");
+              openWindow("browser");
               setContextMenu((prev) => ({ ...prev, visible: false }));
             }}
-            className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg hover:bg-white/10 text-left transition-colors"
+            className="w-full flex items-center justify-between px-2.5 py-1 rounded-lg hover:bg-white/10 text-left transition-colors"
           >
             <div className="flex items-center space-x-2">
-              <Bot className="w-3.5 h-3.5 text-cyan-400" />
-              <span>AI Agent Hub</span>
+              <Globe className="w-3.5 h-3.5 text-cyan-400" />
+              <span>Zen Browser</span>
             </div>
-            <kbd className="text-[9px] text-slate-500">Super+A</kbd>
+            <kbd className="text-[9px] text-slate-500">Super+B</kbd>
           </button>
 
           <button
@@ -245,7 +252,7 @@ export const Desktop: React.FC = () => {
               openWindow("editor");
               setContextMenu((prev) => ({ ...prev, visible: false }));
             }}
-            className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg hover:bg-white/10 text-left transition-colors"
+            className="w-full flex items-center justify-between px-2.5 py-1 rounded-lg hover:bg-white/10 text-left transition-colors"
           >
             <div className="flex items-center space-x-2">
               <Code2 className="w-3.5 h-3.5 text-purple-400" />
@@ -257,10 +264,25 @@ export const Desktop: React.FC = () => {
           <button
             onClick={() => {
               if (soundEffects) playTactileClick();
+              openWindow("agent");
+              setContextMenu((prev) => ({ ...prev, visible: false }));
+            }}
+            className="w-full flex items-center justify-between px-2.5 py-1 rounded-lg hover:bg-white/10 text-left transition-colors"
+          >
+            <div className="flex items-center space-x-2">
+              <Bot className="w-3.5 h-3.5 text-cyan-400" />
+              <span>Agent Hub</span>
+            </div>
+            <kbd className="text-[9px] text-slate-500">Super+A</kbd>
+          </button>
+
+          <button
+            onClick={() => {
+              if (soundEffects) playTactileClick();
               openWindow("files");
               setContextMenu((prev) => ({ ...prev, visible: false }));
             }}
-            className="w-full flex items-center space-x-2 px-2.5 py-1.5 rounded-lg hover:bg-white/10 text-left transition-colors"
+            className="w-full flex items-center space-x-2 px-2.5 py-1 rounded-lg hover:bg-white/10 text-left transition-colors"
           >
             <Folder className="w-3.5 h-3.5 text-amber-400" />
             <span>Files (Yazi)</span>
@@ -269,10 +291,58 @@ export const Desktop: React.FC = () => {
           <button
             onClick={() => {
               if (soundEffects) playTactileClick();
+              openWindow("player");
+              setContextMenu((prev) => ({ ...prev, visible: false }));
+            }}
+            className="w-full flex items-center space-x-2 px-2.5 py-1 rounded-lg hover:bg-white/10 text-left transition-colors"
+          >
+            <Disc className="w-3.5 h-3.5 text-purple-400" />
+            <span>Lo-Fi Audio Station</span>
+          </button>
+
+          <button
+            onClick={() => {
+              if (soundEffects) playTactileClick();
+              openWindow("calculator");
+              setContextMenu((prev) => ({ ...prev, visible: false }));
+            }}
+            className="w-full flex items-center space-x-2 px-2.5 py-1 rounded-lg hover:bg-white/10 text-left transition-colors"
+          >
+            <Calculator className="w-3.5 h-3.5 text-amber-400" />
+            <span>Programmer Calculator</span>
+          </button>
+
+          <button
+            onClick={() => {
+              if (soundEffects) playTactileClick();
+              openWindow("doom");
+              setContextMenu((prev) => ({ ...prev, visible: false }));
+            }}
+            className="w-full flex items-center space-x-2 px-2.5 py-1 rounded-lg hover:bg-white/10 text-left transition-colors"
+          >
+            <Gamepad2 className="w-3.5 h-3.5 text-rose-400" />
+            <span>DOOM (WASM Arena)</span>
+          </button>
+
+          <button
+            onClick={() => {
+              if (soundEffects) playTactileClick();
+              openWindow("paint");
+              setContextMenu((prev) => ({ ...prev, visible: false }));
+            }}
+            className="w-full flex items-center space-x-2 px-2.5 py-1 rounded-lg hover:bg-white/10 text-left transition-colors"
+          >
+            <Paintbrush className="w-3.5 h-3.5 text-emerald-400" />
+            <span>Pixel Art Studio</span>
+          </button>
+
+          <button
+            onClick={() => {
+              if (soundEffects) playTactileClick();
               openWindow("monitor");
               setContextMenu((prev) => ({ ...prev, visible: false }));
             }}
-            className="w-full flex items-center space-x-2 px-2.5 py-1.5 rounded-lg hover:bg-white/10 text-left transition-colors"
+            className="w-full flex items-center space-x-2 px-2.5 py-1 rounded-lg hover:bg-white/10 text-left transition-colors"
           >
             <Activity className="w-3.5 h-3.5 text-rose-400" />
             <span>System Monitor (btop)</span>
@@ -284,10 +354,10 @@ export const Desktop: React.FC = () => {
               openWindow("v86");
               setContextMenu((prev) => ({ ...prev, visible: false }));
             }}
-            className="w-full flex items-center space-x-2 px-2.5 py-1.5 rounded-lg hover:bg-white/10 text-left transition-colors"
+            className="w-full flex items-center space-x-2 px-2.5 py-1 rounded-lg hover:bg-white/10 text-left transition-colors"
           >
             <Cpu className="w-3.5 h-3.5 text-emerald-400" />
-            <span>Alpine Linux VM</span>
+            <span>Alpine Linux VM (x86)</span>
           </button>
 
           <button
@@ -296,7 +366,7 @@ export const Desktop: React.FC = () => {
               openWindow("settings");
               setContextMenu((prev) => ({ ...prev, visible: false }));
             }}
-            className="w-full flex items-center space-x-2 px-2.5 py-1.5 rounded-lg hover:bg-white/10 text-left transition-colors"
+            className="w-full flex items-center space-x-2 px-2.5 py-1 rounded-lg hover:bg-white/10 text-left transition-colors"
           >
             <Settings className="w-3.5 h-3.5 text-slate-400" />
             <span>Settings & Themes</span>
@@ -309,7 +379,7 @@ export const Desktop: React.FC = () => {
               cycleWallpaper();
               setContextMenu((prev) => ({ ...prev, visible: false }));
             }}
-            className="w-full flex items-center space-x-2 px-2.5 py-1.5 rounded-lg hover:bg-white/10 text-left transition-colors"
+            className="w-full flex items-center space-x-2 px-2.5 py-1 rounded-lg hover:bg-white/10 text-left transition-colors"
           >
             <ImageIcon className="w-3.5 h-3.5 text-amber-400" />
             <span>Cycle Wallpaper ({wallpaperIdx + 1}/{WALLPAPERS.length})</span>
@@ -321,7 +391,7 @@ export const Desktop: React.FC = () => {
               toggleSplitDirection();
               setContextMenu((prev) => ({ ...prev, visible: false }));
             }}
-            className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg hover:bg-white/10 text-left transition-colors"
+            className="w-full flex items-center justify-between px-2.5 py-1 rounded-lg hover:bg-white/10 text-left transition-colors"
           >
             <div className="flex items-center space-x-2">
               <Columns className="w-3.5 h-3.5 text-cyan-400" />
@@ -333,16 +403,16 @@ export const Desktop: React.FC = () => {
           <button
             onClick={() => {
               if (soundEffects) playTactileClick();
-              setHotkeysModalOpen(true);
+              lockDesktop();
               setContextMenu((prev) => ({ ...prev, visible: false }));
             }}
-            className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg hover:bg-white/10 text-left transition-colors"
+            className="w-full flex items-center justify-between px-2.5 py-1 rounded-lg hover:bg-rose-500/20 text-left transition-colors"
           >
             <div className="flex items-center space-x-2">
-              <HelpCircle className="w-3.5 h-3.5 text-slate-400" />
-              <span>Keybindings</span>
+              <Lock className="w-3.5 h-3.5 text-rose-400" />
+              <span>Lock Desktop</span>
             </div>
-            <kbd className="text-[9px] text-slate-500">Super+?</kbd>
+            <kbd className="text-[9px] text-slate-500">Super+L</kbd>
           </button>
         </div>
       )}

@@ -13,6 +13,11 @@ import {
   Activity,
   Cpu,
   Settings,
+  Globe,
+  Disc,
+  Calculator,
+  Gamepad2,
+  Paintbrush,
 } from "lucide-react";
 import { AppId, WindowInstance } from "@/types/os";
 import { useWindowStore } from "@/store/windowStore";
@@ -32,6 +37,11 @@ const APP_ICONS: Record<AppId, React.ReactNode> = {
   monitor: <Activity className="w-3.5 h-3.5 text-rose-400" />,
   settings: <Settings className="w-3.5 h-3.5 text-slate-300" />,
   v86: <Cpu className="w-3.5 h-3.5 text-emerald-400" />,
+  browser: <Globe className="w-3.5 h-3.5 text-cyan-400" />,
+  player: <Disc className="w-3.5 h-3.5 text-purple-400" />,
+  calculator: <Calculator className="w-3.5 h-3.5 text-amber-400" />,
+  doom: <Gamepad2 className="w-3.5 h-3.5 text-rose-400" />,
+  paint: <Paintbrush className="w-3.5 h-3.5 text-emerald-400" />,
 };
 
 const APP_PIDS: Record<AppId, number> = {
@@ -42,6 +52,11 @@ const APP_PIDS: Record<AppId, number> = {
   monitor: 712,
   settings: 820,
   v86: 940,
+  browser: 1042,
+  player: 1120,
+  calculator: 1205,
+  doom: 1337,
+  paint: 1410,
 };
 
 export const WindowFrame: React.FC<WindowFrameProps> = ({ window: win, children }) => {
@@ -118,7 +133,7 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({ window: win, children 
     <div
       style={floatingStyle}
       onMouseDown={handleMouseDown}
-      className={`flex flex-col rounded-xl overflow-hidden bg-[#0c0f17] transition-all duration-150 ${
+      className={`flex flex-col rounded-xl overflow-hidden bg-[#0c0f17] transition-all duration-150 animate-hypr-pop ${
         isFocused ? "hyprland-window-active" : "hyprland-window-inactive"
       }`}
     >

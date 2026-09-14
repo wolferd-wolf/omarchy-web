@@ -9,6 +9,11 @@ import { FilesApp } from "../apps/FilesApp";
 import { MonitorApp } from "../apps/MonitorApp";
 import { SettingsApp } from "../apps/SettingsApp";
 import { V86App } from "../apps/V86App";
+import { BrowserApp } from "../apps/BrowserApp";
+import { MusicApp } from "../apps/MusicApp";
+import { CalcApp } from "../apps/CalcApp";
+import { DoomApp } from "../apps/DoomApp";
+import { PaintApp } from "../apps/PaintApp";
 
 interface AppRendererProps {
   window: WindowInstance;
@@ -30,6 +35,16 @@ export const AppRenderer: React.FC<AppRendererProps> = ({ window: win }) => {
       return <SettingsApp windowId={win.id} />;
     case "v86":
       return <V86App windowId={win.id} />;
+    case "browser":
+      return <BrowserApp />;
+    case "player":
+      return <MusicApp />;
+    case "calculator":
+      return <CalcApp />;
+    case "doom":
+      return <DoomApp />;
+    case "paint":
+      return <PaintApp />;
     default:
       return (
         <div className="p-4 text-slate-400 font-mono text-xs">

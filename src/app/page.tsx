@@ -5,6 +5,10 @@ import { QuickShellBar } from "@/components/shell/QuickShellBar";
 import { Desktop } from "@/components/wm/Desktop";
 import { CommandPalette } from "@/components/shell/CommandPalette";
 import { HotkeysModal } from "@/components/shell/HotkeysModal";
+import { ControlCenter } from "@/components/shell/ControlCenter";
+import { LockScreen } from "@/components/shell/LockScreen";
+import { NotificationDaemon } from "@/components/shell/NotificationDaemon";
+import { ScreenshotOverlay } from "@/components/shell/ScreenshotOverlay";
 import { useWindowStore } from "@/store/windowStore";
 import { useSystemStore } from "@/store/systemStore";
 import { playTactileClick, playWindowSwitch } from "@/core/audio/soundEffects";
@@ -26,7 +30,7 @@ export default function Home() {
     windows,
   } = useWindowStore();
 
-  const { soundEffects } = useSystemStore();
+  const { soundEffects, lockDesktop, triggerScreenshot } = useSystemStore();
   const initializedRef = useRef(false);
 
   // Initialize startup layout (Terminal + Neovim tiled side by side on Workspace 1)
@@ -60,6 +64,30 @@ export default function Home() {
         return;
       }
 
+      // Super + B: Web Browser
+      if (isSuper && e.key.toLowerCase() === "b") {
+        e.preventDefault();
+        if (soundEffects) playTactileClick();
+        openWindow("browser", "Zen Browser");
+        return;
+      }
+
+      // Super + M: Music Player
+      if (isSuper && e.key.toLowerCase() === "m") {
+        e.preventDefault();
+        if (soundEffects) playTactileClick();
+        openWindow("player", "Lo-Fi Audio Station");
+        return;
+      }
+
+      // Super + C: Calculator
+      if (isSuper && e.key.toLowerCase() === "c") {
+        e.preventDefault();
+        if (soundEffects) playTactileClick();
+        openWindow("calculator", "Programmer Calculator");
+        return;
+      }
+
       // Super + A: Agent Hub
       if (isSuper && e.key.toLowerCase() === "a") {
         e.preventDefault();
@@ -73,6 +101,21 @@ export default function Home() {
         e.preventDefault();
         if (soundEffects) playTactileClick();
         openWindow("editor", "Neovim - main.rs", { filePath: "/home/user/projects/main.rs" });
+        return;
+      }
+
+      // Super + L: Lock Screen
+      if (isSuper && e.key.toLowerCase() === "l") {
+        e.preventDefault();
+        if (soundEffects) playTactileClick();
+        lockDesktop();
+        return;
+      }
+
+      // Super + Shift + S: Capture Screenshot
+      if (isSuper && e.shiftKey && e.key.toLowerCase() === "s") {
+        e.preventDefault();
+        triggerScreenshot();
         return;
       }
 
@@ -157,6 +200,8 @@ export default function Home() {
     moveWindowToWorkspace,
     setCommandPaletteOpen,
     setHotkeysModalOpen,
+    lockDesktop,
+    triggerScreenshot,
   ]);
 
   return (
@@ -167,9 +212,21 @@ export default function Home() {
       {/* Tiling Desktop Canvas */}
       <Desktop />
 
+      {/* Quick Settings Drawer */}
+      <ControlCenter />
+
+      {/* Floating System Notification Toasts */}
+      <NotificationDaemon />
+
+      {/* Camera Shutter Flash Effect */}
+      <ScreenshotOverlay />
+
       {/* Global Modals */}
       <CommandPalette />
       <HotkeysModal />
+
+      {/* Fullscreen Lock Screen */}
+      <LockScreen />
     </div>
   );
 }

@@ -5,7 +5,12 @@ export type AppId =
   | "files"
   | "monitor"
   | "settings"
-  | "v86";
+  | "v86"
+  | "browser"
+  | "player"
+  | "calculator"
+  | "doom"
+  | "paint";
 
 export type SplitDirection = "horizontal" | "vertical";
 
@@ -85,4 +90,5 @@ export interface SystemNotification {
   message: string;
   timestamp: number;
   type: "info" | "success" | "warning" | "agent";
+  icon?: string;
 }

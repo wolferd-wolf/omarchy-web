@@ -1,5 +1,6 @@
 import { useFSStore } from "@/store/fsStore";
 import { useWindowStore } from "@/store/windowStore";
+import { useSystemStore } from "@/store/systemStore";
 import { AppId } from "@/types/os";
 
 export interface CommandOutput {
@@ -457,15 +458,74 @@ Status: ready, model: hyprland-tiling, kernel: v86-wasm`,
       case "neofetch":
         return { output: OMARCHY_ASCII };
 
+      case "lock": {
+        useSystemStore.getState().lockDesktop();
+        return { output: "Desktop locked." };
+      }
+
+      case "screenshot": {
+        useSystemStore.getState().triggerScreenshot();
+        return { output: "Screenshot captured and saved to ~/screenshots/" };
+      }
+
+      case "pkg":
+      case "omapkg": {
+        const sub = args[0] || "list";
+        if (sub === "list") {
+          return {
+            output: `\x1b[1;38;5;48mInstalled Omarchy Desktop Apps:\x1b[0m
+  terminal    - GPU-accelerated Alacritty emulator with Zsh 5.9
+  browser     - Zen Web Browser with tabbed sandboxed browsing
+  editor      - Neovim 0.10.1 with Lua tree & Lualine
+  player      - Lo-Fi Audio Station & real-time Web Audio spectrum visualizer
+  calculator  - Programmer & Scientific calculator (HEX, DEC, BIN, OCT)
+  doom        - Retro WASM 3D Arena (Doom raycaster)
+  paint       - Pixel Art Studio drawing canvas
+  files       - Yazi high-speed terminal file manager
+  monitor     - Btop++ system hardware & process monitor
+  v86         - Real x86 Linux 32-bit WebAssembly kernel (Alpine 3.19)
+  agent       - Omarchy Autonomous Agent loop daemon
+  settings    - System preferences, Hyprland gaps, and themes`,
+          };
+        }
+        if (sub === "install" && args[1]) {
+          const targetApp = args[1].toLowerCase() as AppId;
+          const validApps: AppId[] = ["terminal", "browser", "editor", "files", "monitor", "v86", "settings", "player", "calculator", "doom", "paint", "agent"];
+          if (validApps.includes(targetApp)) {
+            wm.openWindow(targetApp);
+            return { output: `Package '${targetApp}' verified and launched on workspace ${wm.activeWorkspaceId}.` };
+          }
+          return { output: `pkg: repository package '${args[1]}' not found. Run 'pkg list'.`, error: true };
+        }
+        return { output: "Usage: pkg list | pkg install <app>" };
+      }
+
       case "open": {
-        if (args.length === 0) return { output: "open: specify an app (terminal, agent, editor, files, monitor, v86, settings)", error: true };
-        const app = args[0].toLowerCase() as AppId;
-        const validApps: AppId[] = ["terminal", "agent", "editor", "files", "monitor", "v86", "settings"];
-        if (!validApps.includes(app)) {
+        if (args.length === 0) return { output: "open: specify an app (terminal, browser, editor, player, calc, files, monitor, doom, paint, v86, settings)", error: true };
+        let appName = args[0].toLowerCase();
+        if (appName === "music") appName = "player";
+        if (appName === "calc") appName = "calculator";
+        if (appName === "web") appName = "browser";
+
+        const validApps: AppId[] = [
+          "terminal",
+          "agent",
+          "editor",
+          "files",
+          "monitor",
+          "v86",
+          "settings",
+          "browser",
+          "player",
+          "calculator",
+          "doom",
+          "paint",
+        ];
+        if (!validApps.includes(appName as AppId)) {
           return { output: `open: unknown app '${args[0]}'. Valid apps: ${validApps.join(", ")}`, error: true };
         }
-        wm.openWindow(app);
-        return { output: `Launched ${app} on workspace ${wm.activeWorkspaceId}.` };
+        wm.openWindow(appName as AppId);
+        return { output: `Launched ${appName} on workspace ${wm.activeWorkspaceId}.` };
       }
 
       case "uname":

@@ -28,10 +28,15 @@ const APP_METADATA: Record<AppId, { title: string; defaultWidth: number; default
   terminal: { title: "Terminal (zsh)", defaultWidth: 720, defaultHeight: 480 },
   agent: { title: "Agent Hub ⚡", defaultWidth: 680, defaultHeight: 560 },
   editor: { title: "Neovim", defaultWidth: 800, defaultHeight: 540 },
-  files: { title: "Files", defaultWidth: 640, defaultHeight: 440 },
+  files: { title: "Files (Yazi)", defaultWidth: 680, defaultHeight: 460 },
   monitor: { title: "System Monitor (btop)", defaultWidth: 700, defaultHeight: 450 },
-  settings: { title: "Settings & Themes", defaultWidth: 540, defaultHeight: 420 },
+  settings: { title: "Settings & Themes", defaultWidth: 560, defaultHeight: 440 },
   v86: { title: "Alpine Linux x86 (WASM VM)", defaultWidth: 720, defaultHeight: 480 },
+  browser: { title: "Zen Browser", defaultWidth: 860, defaultHeight: 560 },
+  player: { title: "Lo-Fi Audio Station", defaultWidth: 520, defaultHeight: 400 },
+  calculator: { title: "Programmer Calculator", defaultWidth: 360, defaultHeight: 480 },
+  doom: { title: "Retro WASM Arena", defaultWidth: 640, defaultHeight: 460 },
+  paint: { title: "Pixel Studio", defaultWidth: 660, defaultHeight: 480 },
 };
 
 function insertTilingNode(
