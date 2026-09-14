@@ -1,0 +1,106 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg-primary: #0a0c13;
+  --bg-surface: #101420;
+  --bg-surface-elevated: #161b2c;
+  --border-subtle: #222941;
+  --border-active: #22c55e;
+  --border-secondary: #06b6d4;
+  --accent: #22c55e;
+  --accent-glow: rgba(34, 197, 94, 0.4);
+  --text-primary: #f1f5f9;
+  --text-muted: #94a3b8;
+}
+
+[data-theme="tokyonight"] {
+  --bg-primary: #1a1b26;
+  --bg-surface: #24283b;
+  --bg-surface-elevated: #2f3549;
+  --border-subtle: #414868;
+  --border-active: #7aa2f7;
+  --border-secondary: #bb9af7;
+  --accent: #7aa2f7;
+  --accent-glow: rgba(122, 162, 247, 0.4);
+}
+
+[data-theme="catppuccin"] {
+  --bg-primary: #1e1e2e;
+  --bg-surface: #181825;
+  --bg-surface-elevated: #313244;
+  --border-subtle: #45475a;
+  --border-active: #cba6f7;
+  --border-secondary: #89b4fa;
+  --accent: #cba6f7;
+  --accent-glow: rgba(203, 166, 247, 0.4);
+}
+
+[data-theme="gruvbox"] {
+  --bg-primary: #1d2021;
+  --bg-surface: #282828;
+  --bg-surface-elevated: #3c3836;
+  --border-subtle: #504945;
+  --border-active: #fabd2f;
+  --border-secondary: #fe8019;
+  --accent: #fabd2f;
+  --accent-glow: rgba(250, 189, 47, 0.4);
+}
+
+* {
+  box-sizing: border-box;
+  user-select: none;
+}
+
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  overflow: hidden;
+  font-family: var(--font-inter), sans-serif;
+  margin: 0;
+  padding: 0;
+  height: 100vh;
+  width: 100vw;
+}
+
+/* Custom Scrollbar for terminal & editor */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.6);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.25);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.45);
+}
+
+/* Terminal & Code font */
+.font-terminal {
+  font-family: "JetBrains Mono", "Fira Code", monospace;
+}
+
+/* Hyprland active window glow */
+.hyprland-active-border {
+  border: 1.5px solid var(--border-active);
+  box-shadow: 0 0 16px -2px var(--accent-glow);
+}
+
+.hyprland-inactive-border {
+  border: 1.5px solid var(--border-subtle);
+}
+
+/* Quickshell pill */
+.quickshell-pill {
+  background: rgba(22, 27, 44, 0.7);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
