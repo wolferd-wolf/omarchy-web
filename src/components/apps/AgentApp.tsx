@@ -1,7 +1,19 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import { Bot, Send, Sparkles, CheckCircle2, Terminal, Code2, Cpu } from "lucide-react";
+import {
+  Bot,
+  Send,
+  Sparkles,
+  CheckCircle2,
+  Terminal,
+  Code2,
+  Cpu,
+  Layers,
+  FileCode,
+  ArrowRight,
+  ShieldCheck,
+} from "lucide-react";
 import { useAgentStore } from "@/store/agentStore";
 
 interface AgentAppProps {
@@ -25,31 +37,34 @@ export const AgentApp: React.FC<AgentAppProps> = () => {
     sendMessage(text);
   };
 
-  const quickPrompts = [
-    "Create a new JavaScript project",
-    "Launch a terminal window",
-    "Open the Neovim editor",
-    "Boot real Linux kernel (v86)",
+  const devTasks = [
+    { label: "Create API Client", prompt: "Create a new TypeScript API client in projects/api.ts" },
+    { label: "Check Git Status", prompt: "Inspect git status and check modified project files" },
+    { label: "Run Alpine Linux VM", prompt: "Boot real x86 Linux kernel in WebAssembly" },
+    { label: "Refactor Theme Tokens", prompt: "Inspect and refine Omarchy desktop theme tokens" },
   ];
 
   return (
-    <div className="flex flex-col h-full w-full bg-omarchy-950 font-sans text-xs">
-      {/* Header bar */}
-      <div className="flex items-center justify-between px-4 py-2.5 border-b border-white/5 bg-omarchy-900/60 select-none">
+    <div className="flex flex-col h-full w-full bg-[#080a11] font-mono-os text-xs text-slate-200 select-none">
+      {/* Agent Telemetry Header */}
+      <div className="h-9 px-3 border-b border-white/[0.08] bg-[#0d101b] flex items-center justify-between text-[11px]">
         <div className="flex items-center space-x-2">
-          <Bot className="w-4 h-4 text-omarchy-cyan animate-pulse" />
-          <span className="font-bold text-slate-200">Omarchy Autonomous Agent</span>
-          <span className="px-1.5 py-0.5 rounded-full text-[10px] bg-omarchy-accent/15 text-omarchy-accent font-mono font-medium">
-            ONLINE
+          <Bot className="w-3.5 h-3.5 text-omarchy-cyan" />
+          <span className="font-bold text-slate-100">omarchy-agent daemon</span>
+          <span className="px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-400 font-semibold text-[10px]">
+            ACTIVE
           </span>
         </div>
-        <div className="text-[10px] text-slate-500 font-mono">
-          Integrated with Quickshell & VFS
+
+        <div className="hidden sm:flex items-center space-x-3 text-slate-400 text-[10px] tabular-nums">
+          <span>Engine: <strong className="text-slate-200">v4-Agentic</strong></span>
+          <span>PID: <strong className="text-slate-200">210</strong></span>
+          <span>Context: <strong className="text-omarchy-accent">24.5k</strong></span>
         </div>
       </div>
 
-      {/* Message Stream */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 select-text">
+      {/* Execution Stream */}
+      <div className="flex-1 overflow-y-auto p-3 space-y-3 select-text bg-[#07080e]">
         {messages.map((msg) => {
           const isUser = msg.sender === "user";
           return (
@@ -58,50 +73,50 @@ export const AgentApp: React.FC<AgentAppProps> = () => {
               className={`flex flex-col ${isUser ? "items-end" : "items-start"}`}
             >
               <div
-                className={`max-w-[85%] rounded-2xl p-3 shadow-md ${
+                className={`max-w-[90%] rounded-lg p-3 text-xs leading-relaxed border ${
                   isUser
-                    ? "bg-omarchy-cyan/15 text-slate-100 border border-omarchy-cyan/30 rounded-tr-sm"
-                    : "bg-omarchy-850 text-slate-200 border border-white/5 rounded-tl-sm"
+                    ? "bg-omarchy-cyan/10 border-omarchy-cyan/30 text-slate-100"
+                    : "bg-[#0f1322] border-white/[0.08] text-slate-300"
                 }`}
               >
                 {!isUser && (
-                  <div className="flex items-center space-x-1.5 text-[11px] font-mono text-omarchy-cyan font-bold mb-1.5 select-none">
-                    <Sparkles className="w-3 h-3" />
-                    <span>Omarchy Agent</span>
+                  <div className="flex items-center justify-between text-[11px] font-bold text-omarchy-cyan mb-2 pb-1.5 border-b border-white/5 select-none">
+                    <span className="flex items-center space-x-1.5">
+                      <Sparkles className="w-3.5 h-3.5 text-omarchy-cyan" />
+                      <span>Omarchy Autonomous Agent</span>
+                    </span>
+                    <span className="text-[10px] text-slate-500 font-normal">
+                      {new Date(msg.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                    </span>
                   </div>
                 )}
 
-                <div className="whitespace-pre-wrap leading-relaxed">
-                  {msg.content}
-                </div>
+                <div className="whitespace-pre-wrap">{msg.content}</div>
 
-                {/* Tool call indicator card */}
+                {/* Tool execution output card */}
                 {msg.toolCall && (
-                  <div className="mt-2.5 p-2 rounded-xl bg-black/40 border border-white/10 font-mono text-[11px] space-y-1">
-                    <div className="flex items-center space-x-1.5 text-omarchy-accent font-bold">
+                  <div className="mt-2.5 p-2 rounded bg-black/60 border border-emerald-500/30 text-[11px] space-y-1">
+                    <div className="flex items-center space-x-1.5 text-emerald-400 font-bold">
                       <CheckCircle2 className="w-3.5 h-3.5" />
-                      <span>Tool Executed: {msg.toolCall.name}</span>
+                      <span>Tool: {msg.toolCall.name}</span>
                     </div>
                     {msg.toolCall.result && (
-                      <div className="text-slate-400 pl-5">
+                      <div className="text-slate-400 font-terminal text-[10px] pl-5 bg-black/40 p-1.5 rounded border border-white/5">
                         {msg.toolCall.result}
                       </div>
                     )}
                   </div>
                 )}
               </div>
-              <span className="text-[10px] font-mono text-slate-500 mt-1 px-1">
-                {new Date(msg.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-              </span>
             </div>
           );
         })}
 
         {isThinking && (
-          <div className="flex items-center space-x-2 p-3 rounded-2xl bg-omarchy-850 border border-white/5 max-w-xs animate-pulse">
+          <div className="flex items-center space-x-2 p-2.5 rounded-lg bg-[#0f1322] border border-cyan-500/30 max-w-sm text-xs animate-pulse">
             <Bot className="w-4 h-4 text-omarchy-cyan animate-spin" />
-            <span className="text-slate-400 font-mono text-xs">
-              Agent is reasoning and executing tools...
+            <span className="text-cyan-300 text-[11px]">
+              Analyzing filesystem, compiling code, and executing tools...
             </span>
           </div>
         )}
@@ -109,39 +124,44 @@ export const AgentApp: React.FC<AgentAppProps> = () => {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Quick Suggestion Pills */}
-      <div className="px-4 py-2 border-t border-white/5 bg-omarchy-950 flex items-center space-x-2 overflow-x-auto no-scrollbar select-none">
-        {quickPrompts.map((prompt) => (
+      {/* Suggested Autonomous Tasks */}
+      <div className="px-3 py-1.5 border-t border-white/[0.06] bg-[#0a0c16] flex items-center space-x-2 overflow-x-auto select-none">
+        <span className="text-[10px] text-slate-500 font-bold uppercase flex-shrink-0">
+          Tasks:
+        </span>
+        {devTasks.map((task) => (
           <button
-            key={prompt}
-            onClick={() => sendMessage(prompt)}
+            key={task.label}
+            onClick={() => sendMessage(task.prompt)}
             disabled={isThinking}
-            className="px-2.5 py-1 rounded-full text-[11px] quickshell-pill hover:bg-white/10 text-slate-300 hover:text-white whitespace-nowrap transition-colors"
+            className="px-2 py-0.5 rounded bg-white/[0.06] hover:bg-white/10 text-slate-300 hover:text-white text-[10px] whitespace-nowrap transition-colors border border-white/5"
           >
-            {prompt}
+            {task.label}
           </button>
         ))}
       </div>
 
-      {/* Input Bar */}
+      {/* Input Form */}
       <form
         onSubmit={handleSend}
-        className="p-3 border-t border-white/10 bg-omarchy-900/80 flex items-center space-x-2"
+        className="p-2.5 border-t border-white/[0.08] bg-[#0d101c] flex items-center space-x-2"
       >
+        <span className="text-omarchy-cyan text-xs font-bold pl-1 select-none">❯</span>
         <input
           type="text"
           value={inputVal}
           onChange={(e) => setInputVal(e.target.value)}
-          placeholder="Ask agent to write code, manage files, or open tools..."
+          placeholder="Command agent: 'create app.js', 'inspect system', 'run tests'..."
           disabled={isThinking}
-          className="flex-1 px-3.5 py-2 rounded-xl bg-omarchy-950 border border-white/10 text-slate-100 text-xs focus:outline-none focus:border-omarchy-cyan/50 placeholder:text-slate-500"
+          className="flex-1 bg-transparent border-none outline-none text-slate-100 font-mono-os text-xs p-0 focus:ring-0 placeholder:text-slate-600"
         />
         <button
           type="submit"
           disabled={!inputVal.trim() || isThinking}
-          className="p-2.5 rounded-xl bg-omarchy-cyan hover:bg-omarchy-cyan/80 disabled:opacity-40 text-omarchy-950 font-bold transition-all"
+          className="px-2.5 py-1 rounded bg-omarchy-cyan hover:bg-omarchy-cyan/80 disabled:opacity-40 text-omarchy-950 font-black text-xs transition-colors flex items-center space-x-1"
         >
-          <Send className="w-3.5 h-3.5" />
+          <span>EXEC</span>
+          <Send className="w-3 h-3" />
         </button>
       </form>
     </div>

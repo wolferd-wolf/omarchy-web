@@ -2,16 +2,24 @@
 
 import React from "react";
 import { useWindowStore } from "@/store/windowStore";
+import { useSystemStore } from "@/store/systemStore";
+import { playWindowSwitch } from "@/core/audio/soundEffects";
 
 export const WorkspacePills: React.FC = () => {
-  const { workspaces, activeWorkspaceId, windows, switchWorkspace } = useWindowStore();
+  const { activeWorkspaceId, windows, switchWorkspace } = useWindowStore();
+  const { soundEffects } = useSystemStore();
 
   const getWindowCount = (wsId: number) => {
     return Object.values(windows).filter((w) => w.workspaceId === wsId).length;
   };
 
+  const handleSwitch = (id: number) => {
+    if (soundEffects) playWindowSwitch();
+    switchWorkspace(id);
+  };
+
   return (
-    <div className="flex items-center space-x-1.5 px-2 py-1 rounded-full quickshell-pill">
+    <div className="flex items-center space-x-1 px-1.5 py-0.5 rounded-md waybar-module">
       {[1, 2, 3, 4, 5].map((id) => {
         const isActive = activeWorkspaceId === id;
         const count = getWindowCount(id);
@@ -19,17 +27,19 @@ export const WorkspacePills: React.FC = () => {
         return (
           <button
             key={id}
-            onClick={() => switchWorkspace(id)}
-            className={`relative flex items-center justify-center w-7 h-7 rounded-full text-xs font-mono font-medium transition-all duration-150 ${
+            onClick={() => handleSwitch(id)}
+            className={`relative flex items-center justify-center w-6 h-6 rounded text-xs font-mono-os transition-all duration-100 ${
               isActive
-                ? "bg-omarchy-accent text-omarchy-950 font-bold shadow-lg shadow-omarchy-accent/30 scale-105"
-                : "text-slate-400 hover:text-slate-200 hover:bg-white/10"
+                ? "bg-emerald-400 text-slate-950 font-black shadow-sm"
+                : count > 0
+                ? "text-slate-200 hover:bg-white/10"
+                : "text-slate-500 hover:text-slate-300 hover:bg-white/5"
             }`}
             title={`Workspace ${id} (Super+${id})`}
           >
             <span>{id}</span>
             {count > 0 && !isActive && (
-              <span className="absolute bottom-1 w-1 h-1 rounded-full bg-omarchy-cyan" />
+              <span className="absolute bottom-0.5 w-1 h-1 rounded-full bg-cyan-400/80" />
             )}
           </button>
         );

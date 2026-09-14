@@ -5,7 +5,6 @@ import {
   X,
   Maximize2,
   Minimize2,
-  Maximize,
   Pin,
   Terminal,
   Bot,
@@ -17,6 +16,8 @@ import {
 } from "lucide-react";
 import { AppId, WindowInstance } from "@/types/os";
 import { useWindowStore } from "@/store/windowStore";
+import { useSystemStore } from "@/store/systemStore";
+import { playTactileClick, playWindowSwitch } from "@/core/audio/soundEffects";
 
 interface WindowFrameProps {
   window: WindowInstance;
@@ -24,13 +25,23 @@ interface WindowFrameProps {
 }
 
 const APP_ICONS: Record<AppId, React.ReactNode> = {
-  terminal: <Terminal className="w-3.5 h-3.5 text-omarchy-accent" />,
-  agent: <Bot className="w-3.5 h-3.5 text-omarchy-cyan" />,
-  editor: <Code2 className="w-3.5 h-3.5 text-omarchy-violet" />,
+  terminal: <Terminal className="w-3.5 h-3.5 text-emerald-400" />,
+  agent: <Bot className="w-3.5 h-3.5 text-cyan-400" />,
+  editor: <Code2 className="w-3.5 h-3.5 text-purple-400" />,
   files: <Folder className="w-3.5 h-3.5 text-amber-400" />,
   monitor: <Activity className="w-3.5 h-3.5 text-rose-400" />,
   settings: <Settings className="w-3.5 h-3.5 text-slate-300" />,
   v86: <Cpu className="w-3.5 h-3.5 text-emerald-400" />,
+};
+
+const APP_PIDS: Record<AppId, number> = {
+  terminal: 489,
+  agent: 210,
+  editor: 512,
+  files: 640,
+  monitor: 712,
+  settings: 820,
+  v86: 940,
 };
 
 export const WindowFrame: React.FC<WindowFrameProps> = ({ window: win, children }) => {
@@ -43,13 +54,17 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({ window: win, children 
     updateFloatingRect,
   } = useWindowStore();
 
+  const { soundEffects, setActiveWindowName } = useSystemStore();
+
   const isFocused = focusedWindowId === win.id;
   const isDragging = useRef(false);
   const dragStart = useRef({ mouseX: 0, mouseY: 0, startX: 0, startY: 0 });
 
   const handleMouseDown = () => {
     if (!isFocused) {
+      if (soundEffects) playWindowSwitch();
       focusWindow(win.id);
+      setActiveWindowName(`${win.appId}: ${win.title}`);
     }
   };
 
@@ -69,7 +84,7 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({ window: win, children 
       const dy = moveEvent.clientY - dragStart.current.mouseY;
       updateFloatingRect(win.id, {
         x: Math.max(10, dragStart.current.startX + dx),
-        y: Math.max(45, dragStart.current.startY + dy),
+        y: Math.max(42, dragStart.current.startY + dy),
       });
     };
 
@@ -85,14 +100,14 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({ window: win, children 
 
   const floatingStyle: React.CSSProperties = win.isFloating
     ? win.isMaximized
-      ? { position: "fixed", inset: "40px 0 0 0", zIndex: 40 }
+      ? { position: "fixed", inset: "38px 0 0 0", zIndex: 45 }
       : {
           position: "fixed",
           left: `${win.floatingRect.x}px`,
           top: `${win.floatingRect.y}px`,
           width: `${win.floatingRect.width}px`,
           height: `${win.floatingRect.height}px`,
-          zIndex: isFocused ? 35 : 30,
+          zIndex: isFocused ? 40 : 30,
         }
     : {
         width: "100%",
@@ -103,49 +118,58 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({ window: win, children 
     <div
       style={floatingStyle}
       onMouseDown={handleMouseDown}
-      className={`flex flex-col rounded-xl overflow-hidden bg-omarchy-900 shadow-2xl transition-shadow duration-200 ${
-        isFocused ? "hyprland-active-border" : "hyprland-inactive-border"
+      className={`flex flex-col rounded-xl overflow-hidden bg-[#0c0f17] transition-all duration-150 ${
+        isFocused ? "hyprland-window-active" : "hyprland-window-inactive"
       }`}
     >
-      {/* Title Bar */}
+      {/* Sleek Minimalist Hyprland Window Title Bar */}
       <div
         onMouseDown={handleTitleBarMouseDown}
-        className={`h-8 px-3 flex items-center justify-between border-b select-none transition-colors ${
+        onDoubleClick={(e) => {
+          e.stopPropagation();
+          toggleMaximize(win.id);
+        }}
+        className={`h-7 px-2.5 flex items-center justify-between border-b select-none transition-colors ${
           isFocused
-            ? "bg-omarchy-850 border-white/10"
-            : "bg-omarchy-950/80 border-white/5 opacity-80"
+            ? "bg-[#111422] border-white/[0.1] text-slate-200"
+            : "bg-[#0a0c14] border-white/[0.04] text-slate-400 opacity-85"
         } ${win.isFloating && !win.isMaximized ? "cursor-move" : "cursor-default"}`}
       >
         <div className="flex items-center space-x-2 truncate">
           <span>{APP_ICONS[win.appId] || <Terminal className="w-3.5 h-3.5 text-slate-400" />}</span>
-          <span className="text-xs font-mono font-medium text-slate-200 truncate">
+          <span className="text-[11px] font-mono-os font-semibold truncate tracking-tight">
             {win.title}
           </span>
+          <span className="text-[9px] px-1 py-0.2 rounded bg-white/[0.06] text-slate-500 font-mono-os">
+            pid:{APP_PIDS[win.appId] || 1000}
+          </span>
           {win.isFloating && (
-            <span className="text-[10px] px-1 py-0.2 rounded bg-white/10 text-slate-400 font-mono">
-              floating
+            <span className="text-[9px] px-1 py-0.2 rounded bg-cyan-500/20 text-cyan-400 font-mono-os">
+              float
             </span>
           )}
         </div>
 
         {/* Window controls */}
-        <div className="flex items-center space-x-1 font-mono">
+        <div className="flex items-center space-x-1 font-mono-os">
           {/* Toggle Floating / Tiled */}
           <button
             onClick={(e) => {
               e.stopPropagation();
+              if (soundEffects) playTactileClick();
               toggleFloating(win.id);
             }}
-            className="p-1 rounded hover:bg-white/10 text-slate-400 hover:text-omarchy-cyan transition-colors"
+            className="p-1 rounded hover:bg-white/10 text-slate-400 hover:text-cyan-400 transition-colors"
             title={win.isFloating ? "Tile window (Super+Shift+Space)" : "Float window"}
           >
-            <Pin className={`w-3 h-3 ${win.isFloating ? "text-omarchy-cyan fill-omarchy-cyan" : ""}`} />
+            <Pin className={`w-3 h-3 ${win.isFloating ? "text-cyan-400 fill-cyan-400" : ""}`} />
           </button>
 
           {/* Maximize */}
           <button
             onClick={(e) => {
               e.stopPropagation();
+              if (soundEffects) playTactileClick();
               toggleMaximize(win.id);
             }}
             className="p-1 rounded hover:bg-white/10 text-slate-400 hover:text-slate-100 transition-colors"
@@ -162,6 +186,7 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({ window: win, children 
           <button
             onClick={(e) => {
               e.stopPropagation();
+              if (soundEffects) playTactileClick();
               closeWindow(win.id);
             }}
             className="p-1 rounded hover:bg-rose-500/20 text-slate-400 hover:text-rose-400 transition-colors"
@@ -172,8 +197,8 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({ window: win, children 
         </div>
       </div>
 
-      {/* Window Body */}
-      <div className="flex-1 w-full h-[calc(100%-32px)] overflow-hidden bg-omarchy-950/70">
+      {/* Window Body Container */}
+      <div className="flex-1 w-full h-[calc(100%-28px)] overflow-hidden bg-[#07090f]">
         {children}
       </div>
     </div>

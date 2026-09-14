@@ -1,7 +1,18 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { Folder, File, Save, Check, Code2, RefreshCw } from "lucide-react";
+import React, { useState, useEffect, useRef } from "react";
+import {
+  Folder,
+  File,
+  FileCode,
+  FileText,
+  Save,
+  Check,
+  Code2,
+  ChevronDown,
+  ChevronRight,
+  RefreshCw,
+} from "lucide-react";
 import { useFSStore } from "@/store/fsStore";
 
 interface EditorAppProps {
@@ -18,149 +29,223 @@ export const EditorApp: React.FC<EditorAppProps> = ({ customProps }) => {
     customProps?.filePath || "/home/user/projects/demo.js"
   );
   const [content, setContent] = useState<string>("");
-  const [isSaved, setIsSaved] = useState(true);
-  const [saveIndicator, setSaveIndicator] = useState(false);
-  const [filesList, setFilesList] = useState<string[]>([]);
+  const [isModified, setIsModified] = useState(false);
+  const [commandInput, setCommandInput] = useState("");
+  const [commandNotice, setCommandNotice] = useState("");
+  const [treeExpanded, setTreeExpanded] = useState(true);
+  const [cursorPos, setCursorPos] = useState({ row: 1, col: 1 });
+  const [projectFiles, setProjectFiles] = useState<string[]>([]);
+
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     const loaded = readFile(currentPath);
-    setContent(loaded !== null ? loaded : "// New file buffer\n");
-    setIsSaved(true);
+    setContent(loaded !== null ? loaded : "// New buffer\n");
+    setIsModified(false);
 
-    const projectFiles = listDir("/home/user/projects") || [];
-    setFilesList(projectFiles.map((f) => `/home/user/projects/${f.name}`));
+    const files = listDir("/home/user/projects") || [];
+    setProjectFiles(files.map((f) => `/home/user/projects/${f.name}`));
   }, [currentPath, readFile, listDir]);
 
-  const handleSave = () => {
+  const saveFile = () => {
     writeFile(currentPath, content);
-    setIsSaved(true);
-    setSaveIndicator(true);
-    setTimeout(() => setSaveIndicator(false), 2000);
+    setIsModified(false);
+    setCommandNotice(`"${currentPath}" ${content.split("\n").length}L, ${content.length}B written`);
+    setTimeout(() => setCommandNotice(""), 3000);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if ((e.ctrlKey || e.metaKey) && e.key === "s") {
       e.preventDefault();
-      handleSave();
+      saveFile();
+    }
+    updateCursorPosition();
+  };
+
+  const updateCursorPosition = () => {
+    if (!textareaRef.current) return;
+    const pos = textareaRef.current.selectionStart;
+    const val = textareaRef.current.value.substring(0, pos);
+    const lines = val.split("\n");
+    const row = lines.length;
+    const col = lines[lines.length - 1].length + 1;
+    setCursorPos({ row, col });
+  };
+
+  const handleCommandSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const cmd = commandInput.trim();
+    setCommandInput("");
+
+    if (cmd === ":w" || cmd === ":write") {
+      saveFile();
+    } else if (cmd === ":q" || cmd === ":quit") {
+      setCommandNotice("Buffer closed.");
+    } else if (cmd === ":wq") {
+      saveFile();
+      setCommandNotice("Saved and quit.");
+    } else if (cmd === ":help") {
+      setCommandNotice("Neovim Commands: :w (write), :q (quit), :wq (write & quit)");
+    } else {
+      setCommandNotice(`Not an editor command: ${cmd}`);
     }
   };
 
   const lineCount = content.split("\n").length;
+  const fileName = currentPath.split("/").pop() || "buffer";
 
   return (
-    <div className="flex h-full w-full bg-omarchy-950 font-mono text-xs text-slate-200">
-      {/* File Tree Sidebar */}
-      <div className="w-48 border-r border-white/5 bg-omarchy-900/60 flex flex-col select-none">
-        <div className="px-3 py-2 border-b border-white/5 font-semibold text-slate-400 flex items-center justify-between text-[11px]">
-          <span>FILES</span>
-          <button
-            onClick={() => {
-              const projectFiles = listDir("/home/user/projects") || [];
-              setFilesList(projectFiles.map((f) => `/home/user/projects/${f.name}`));
-            }}
-            className="p-1 hover:text-white"
-            title="Refresh"
-          >
-            <RefreshCw className="w-3 h-3" />
-          </button>
-        </div>
+    <div className="flex h-full w-full bg-[#0c0e15] font-mono-os text-xs text-slate-200 select-none">
+      {/* Neo-tree Sidebar */}
+      {treeExpanded && (
+        <div className="w-52 border-r border-white/[0.08] bg-[#090b10] flex flex-col select-none">
+          <div className="h-8 px-3 border-b border-white/[0.06] flex items-center justify-between text-[11px] font-semibold text-slate-400">
+            <div className="flex items-center space-x-1">
+              <ChevronDown className="w-3.5 h-3.5 text-omarchy-accent" />
+              <span>EXPLORER</span>
+            </div>
+            <button
+              onClick={() => {
+                const files = listDir("/home/user/projects") || [];
+                setProjectFiles(files.map((f) => `/home/user/projects/${f.name}`));
+              }}
+              className="p-1 hover:text-white"
+              title="Refresh tree"
+            >
+              <RefreshCw className="w-3 h-3" />
+            </button>
+          </div>
 
-        <div className="flex-1 overflow-y-auto p-2 space-y-1">
-          {filesList.map((filePath) => {
-            const fileName = filePath.split("/").pop();
-            const isActive = currentPath === filePath;
-            return (
-              <button
-                key={filePath}
-                onClick={() => setCurrentPath(filePath)}
-                className={`w-full flex items-center space-x-2 px-2 py-1.5 rounded-lg text-left truncate transition-colors ${
-                  isActive
-                    ? "bg-omarchy-violet/20 text-omarchy-violet font-semibold"
-                    : "text-slate-400 hover:text-slate-200 hover:bg-white/5"
-                }`}
-              >
-                <File className="w-3.5 h-3.5 flex-shrink-0" />
-                <span className="truncate">{fileName}</span>
-              </button>
-            );
-          })}
-        </div>
-      </div>
+          <div className="flex-1 overflow-y-auto p-1.5 space-y-0.5 text-[11px]">
+            <div className="flex items-center space-x-1.5 px-2 py-1 text-slate-500 font-semibold uppercase text-[10px]">
+              <span>~/projects</span>
+            </div>
 
-      {/* Editor Main Canvas */}
+            {projectFiles.map((filePath) => {
+              const fileBase = filePath.split("/").pop();
+              const isSelected = currentPath === filePath;
+              const isJs = fileBase?.endsWith(".js") || fileBase?.endsWith(".ts");
+              const isPy = fileBase?.endsWith(".py");
+
+              return (
+                <button
+                  key={filePath}
+                  onClick={() => setCurrentPath(filePath)}
+                  className={`w-full flex items-center space-x-2 px-2.5 py-1 rounded text-left truncate transition-colors ${
+                    isSelected
+                      ? "bg-omarchy-violet/20 text-omarchy-violet font-semibold"
+                      : "text-slate-400 hover:text-slate-200 hover:bg-white/5"
+                  }`}
+                >
+                  {isJs ? (
+                    <FileCode className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />
+                  ) : isPy ? (
+                    <FileCode className="w-3.5 h-3.5 text-cyan-400 flex-shrink-0" />
+                  ) : (
+                    <FileText className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
+                  )}
+                  <span className="truncate">{fileBase}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Editor Buffer Area */}
       <div className="flex-1 flex flex-col h-full overflow-hidden">
-        {/* Tab Header & Save */}
-        <div className="h-8 border-b border-white/5 bg-omarchy-900/80 flex items-center justify-between px-3 select-none">
-          <div className="flex items-center space-x-2">
-            <Code2 className="w-3.5 h-3.5 text-omarchy-violet" />
-            <span className="font-semibold text-slate-200 truncate">
-              {currentPath}
-            </span>
-            {!isSaved && (
-              <span className="w-1.5 h-1.5 rounded-full bg-omarchy-amber" title="Unsaved changes" />
-            )}
+        {/* Buffer Tabs Header */}
+        <div className="h-7 border-b border-white/[0.08] bg-[#090a10] flex items-center justify-between px-2 text-[11px]">
+          <div className="flex items-center space-x-1">
+            <div className="flex items-center space-x-1.5 px-2.5 py-1 bg-[#121624] border-t border-omarchy-violet text-slate-100 font-medium rounded-t">
+              <Code2 className="w-3 h-3 text-omarchy-violet" />
+              <span>{fileName}</span>
+              {isModified && <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />}
+            </div>
           </div>
 
           <button
-            onClick={handleSave}
-            className={`flex items-center space-x-1.5 px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors ${
-              saveIndicator
-                ? "bg-emerald-500/20 text-emerald-400"
-                : "bg-white/10 hover:bg-white/20 text-slate-300"
-            }`}
+            onClick={saveFile}
+            className="flex items-center space-x-1 px-2 py-0.5 rounded bg-white/10 hover:bg-white/20 text-slate-300 text-[10px]"
+            title="Save Buffer (Ctrl+S or :w)"
           >
-            {saveIndicator ? (
-              <>
-                <Check className="w-3 h-3 text-emerald-400" />
-                <span>Saved</span>
-              </>
-            ) : (
-              <>
-                <Save className="w-3 h-3" />
-                <span>Save (Ctrl+S)</span>
-              </>
-            )}
+            <Save className="w-3 h-3" />
+            <span>:w</span>
           </button>
         </div>
 
-        {/* Text Area with Line Numbers */}
-        <div className="flex-1 flex overflow-hidden relative bg-black/60">
-          {/* Line Numbers */}
-          <div className="py-3 px-2 text-right text-slate-600 select-none border-r border-white/5 font-mono text-xs w-10 flex-shrink-0">
+        {/* Text Area with Line Number Gutter */}
+        <div className="flex-1 flex overflow-hidden relative bg-[#07090e]">
+          {/* Gutter */}
+          <div className="py-2 px-2 text-right text-slate-600 select-none border-r border-white/[0.05] text-xs w-10 flex-shrink-0 font-mono-os">
             {Array.from({ length: Math.max(1, lineCount) }).map((_, idx) => (
-              <div key={idx} className="leading-5">
+              <div
+                key={idx}
+                className={`leading-5 ${
+                  idx + 1 === cursorPos.row ? "text-amber-400 font-bold" : ""
+                }`}
+              >
                 {idx + 1}
               </div>
             ))}
           </div>
 
-          {/* Code Textarea */}
+          {/* Actual Editable Buffer */}
           <textarea
+            ref={textareaRef}
             value={content}
             onChange={(e) => {
               setContent(e.target.value);
-              setIsSaved(false);
+              setIsModified(true);
             }}
+            onClick={updateCursorPosition}
+            onKeyUp={updateCursorPosition}
             onKeyDown={handleKeyDown}
             spellCheck={false}
-            className="flex-1 p-3 bg-transparent text-slate-100 font-mono text-xs leading-5 outline-none resize-none border-none select-text overflow-auto focus:ring-0"
+            className="flex-1 p-2 bg-transparent text-slate-100 font-mono-os text-xs leading-5 outline-none resize-none border-none select-text overflow-auto focus:ring-0"
           />
         </div>
 
-        {/* Neovim-style Status Line */}
-        <div className="h-6 px-3 bg-omarchy-violet/10 border-t border-white/5 flex items-center justify-between text-[11px] font-mono select-none text-slate-400">
-          <div className="flex items-center space-x-3">
-            <span className="px-1.5 py-0.5 rounded bg-omarchy-violet text-omarchy-950 font-bold text-[10px]">
+        {/* Lualine Status Bar */}
+        <div className="h-6 px-2 bg-[#121626] border-t border-white/[0.08] flex items-center justify-between text-[11px] font-mono-os text-slate-400 select-none">
+          <div className="flex items-center space-x-2">
+            <span className="px-1.5 py-0.2 rounded bg-omarchy-violet text-omarchy-950 font-black text-[10px]">
               NORMAL
             </span>
-            <span className="text-slate-300">{currentPath.split("/").pop()}</span>
+            <span className="text-slate-300 font-medium">{fileName}</span>
+            {isModified && <span className="text-amber-400 text-[10px]">[+]</span>}
           </div>
 
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-3 text-[10px] tabular-nums">
             <span>utf-8</span>
             <span>javascript</span>
-            <span>{lineCount}L</span>
+            <span>
+              {cursorPos.row}:{cursorPos.col}
+            </span>
+            <span className="text-slate-500">
+              {Math.round((cursorPos.row / Math.max(1, lineCount)) * 100)}%
+            </span>
           </div>
+        </div>
+
+        {/* Neovim Bottom Command Prompt Line */}
+        <div className="h-6 px-2 bg-[#08090f] flex items-center text-xs font-mono-os border-t border-white/[0.04]">
+          {commandNotice ? (
+            <span className="text-emerald-400 text-[11px] font-medium animate-fade-in">
+              {commandNotice}
+            </span>
+          ) : (
+            <form onSubmit={handleCommandSubmit} className="w-full flex items-center">
+              <span className="text-slate-500 mr-1">:</span>
+              <input
+                type="text"
+                value={commandInput}
+                onChange={(e) => setCommandInput(e.target.value)}
+                placeholder="type :w to save, :help for commands"
+                className="flex-1 bg-transparent border-none outline-none text-slate-300 font-mono-os text-[11px] p-0 focus:ring-0 placeholder:text-slate-700"
+              />
+            </form>
+          )}
         </div>
       </div>
     </div>

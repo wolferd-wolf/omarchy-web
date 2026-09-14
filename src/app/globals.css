@@ -3,104 +3,178 @@
 @tailwind utilities;
 
 :root {
-  --bg-primary: #0a0c13;
+  --bg-desktop: #06080e;
+  --bg-panel: #0d1018;
   --bg-surface: #101420;
-  --bg-surface-elevated: #161b2c;
-  --border-subtle: #222941;
-  --border-active: #22c55e;
-  --border-secondary: #06b6d4;
-  --accent: #22c55e;
-  --accent-glow: rgba(34, 197, 94, 0.4);
-  --text-primary: #f1f5f9;
-  --text-muted: #94a3b8;
+  --bg-surface-hover: #171d2e;
+  --border-dim: rgba(255, 255, 255, 0.08);
+  --border-focus: #22c55e;
+  --border-gradient: linear-gradient(135deg, #22c55e 0%, #06b6d4 50%, #8b5cf6 100%);
+  --accent-primary: #22c55e;
+  --accent-cyan: #06b6d4;
+  --accent-violet: #8b5cf6;
+  --text-main: #f8fafc;
+  --text-sub: #94a3b8;
+  --text-dim: #64748b;
 }
 
 [data-theme="tokyonight"] {
-  --bg-primary: #1a1b26;
-  --bg-surface: #24283b;
-  --bg-surface-elevated: #2f3549;
-  --border-subtle: #414868;
-  --border-active: #7aa2f7;
-  --border-secondary: #bb9af7;
-  --accent: #7aa2f7;
-  --accent-glow: rgba(122, 162, 247, 0.4);
+  --bg-desktop: #0d0f18;
+  --bg-panel: #161824;
+  --bg-surface: #1f2335;
+  --bg-surface-hover: #292e42;
+  --border-dim: rgba(255, 255, 255, 0.09);
+  --border-focus: #7aa2f7;
+  --border-gradient: linear-gradient(135deg, #7aa2f7 0%, #bb9af7 100%);
+  --accent-primary: #7aa2f7;
+  --accent-cyan: #7dcfff;
+  --accent-violet: #bb9af7;
+  --text-main: #c0caf5;
+  --text-sub: #9aa5ce;
+  --text-dim: #565f89;
 }
 
 [data-theme="catppuccin"] {
-  --bg-primary: #1e1e2e;
-  --bg-surface: #181825;
-  --bg-surface-elevated: #313244;
-  --border-subtle: #45475a;
-  --border-active: #cba6f7;
-  --border-secondary: #89b4fa;
-  --accent: #cba6f7;
-  --accent-glow: rgba(203, 166, 247, 0.4);
+  --bg-desktop: #11111b;
+  --bg-panel: #181825;
+  --bg-surface: #1e1e2e;
+  --bg-surface-hover: #313244;
+  --border-dim: rgba(255, 255, 255, 0.09);
+  --border-focus: #cba6f7;
+  --border-gradient: linear-gradient(135deg, #cba6f7 0%, #89b4fa 100%);
+  --accent-primary: #cba6f7;
+  --accent-cyan: #89dceb;
+  --accent-violet: #f5c2e7;
+  --text-main: #cdd6f4;
+  --text-sub: #a6adc8;
+  --text-dim: #6c7086;
 }
 
 [data-theme="gruvbox"] {
-  --bg-primary: #1d2021;
+  --bg-desktop: #141617;
+  --bg-panel: #1d2021;
   --bg-surface: #282828;
-  --bg-surface-elevated: #3c3836;
-  --border-subtle: #504945;
-  --border-active: #fabd2f;
-  --border-secondary: #fe8019;
-  --accent: #fabd2f;
-  --accent-glow: rgba(250, 189, 47, 0.4);
+  --bg-surface-hover: #3c3836;
+  --border-dim: rgba(255, 255, 255, 0.08);
+  --border-focus: #fabd2f;
+  --border-gradient: linear-gradient(135deg, #fabd2f 0%, #fe8019 100%);
+  --accent-primary: #fabd2f;
+  --accent-cyan: #8ec07c;
+  --accent-violet: #d3869b;
+  --text-main: #ebdbb2;
+  --text-sub: #bdae93;
+  --text-dim: #7c6f64;
+}
+
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 * {
   box-sizing: border-box;
-  user-select: none;
 }
 
 body {
-  background-color: var(--bg-primary);
-  color: var(--text-primary);
+  background-color: var(--bg-desktop);
+  color: var(--text-main);
   overflow: hidden;
-  font-family: var(--font-inter), sans-serif;
   margin: 0;
   padding: 0;
   height: 100vh;
   width: 100vw;
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  user-select: none;
+}
+
+/* Tabular figures for telemetry & numbers */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
 }
 
 /* Custom Scrollbar for terminal & editor */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 
 ::-webkit-scrollbar-track {
-  background: rgba(15, 23, 42, 0.6);
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(148, 163, 184, 0.25);
+  background: rgba(255, 255, 255, 0.14);
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(148, 163, 184, 0.45);
+  background: rgba(255, 255, 255, 0.28);
 }
 
-/* Terminal & Code font */
-.font-terminal {
-  font-family: "JetBrains Mono", "Fira Code", monospace;
+/* Monospace font stack */
+.font-mono-os {
+  font-family: ui-monospace, "JetBrains Mono", "Cascadia Code", "Fira Code", SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
-/* Hyprland active window glow */
-.hyprland-active-border {
-  border: 1.5px solid var(--border-active);
-  box-shadow: 0 0 16px -2px var(--accent-glow);
+/* Hyprland Active Window Border - Authentic Dual-Gradient Edge */
+.hyprland-active-border,
+.hyprland-window-active {
+  border: 1.5px solid transparent !important;
+  background-clip: padding-box, border-box !important;
+  background-origin: padding-box, border-box !important;
+  background-image: linear-gradient(var(--bg-surface), var(--bg-surface)), var(--border-gradient) !important;
+  box-shadow: 0 12px 36px -8px rgba(0, 0, 0, 0.85), 0 0 20px -3px rgba(34, 197, 94, 0.3) !important;
 }
 
-.hyprland-inactive-border {
-  border: 1.5px solid var(--border-subtle);
+.hyprland-inactive-border,
+.hyprland-window-inactive {
+  border: 1.5px solid rgba(255, 255, 255, 0.08) !important;
+  box-shadow: 0 8px 24px -6px rgba(0, 0, 0, 0.65) !important;
 }
 
-/* Quickshell pill */
-.quickshell-pill {
-  background: rgba(22, 27, 44, 0.7);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+/* Quickshell / Waybar Floating Module */
+.waybar-module {
+  background: rgba(13, 16, 24, 0.88);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  box-shadow: 0 4px 16px -2px rgba(0, 0, 0, 0.45);
+}
+
+/* Micro-noise texture for tactile matte finish */
+.noise-overlay {
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.035'/%3E%3C/svg%3E");
+  pointer-events: none;
+}
+
+/* Subtle isometric technical grid */
+.desktop-grid {
+  background-image: radial-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+
+/* Terminal Cursor animation */
+@keyframes blink {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+
+.terminal-cursor {
+  display: inline-block;
+  width: 8px;
+  height: 14px;
+  background-color: var(--accent-primary);
+  vertical-align: middle;
+  animation: blink 1s infinite;
+  margin-left: 2px;
+}
+
+/* Subtle CRT scanline overlay */
+.crt-scanlines {
+  background: linear-gradient(
+    rgba(18, 16, 16, 0) 50%,
+    rgba(0, 0, 0, 0.2) 50%
+  );
+  background-size: 100% 3px;
+  pointer-events: none;
 }

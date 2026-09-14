@@ -3,11 +3,14 @@
 import React, { useState, useRef, useEffect } from "react";
 import { ShellInterpreter } from "@/core/shell/Interpreter";
 import { useFSStore } from "@/store/fsStore";
+import { useSystemStore } from "@/store/systemStore";
+import { playKeyTick } from "@/core/audio/soundEffects";
 
 interface TerminalLine {
   id: string;
   type: "input" | "output";
-  prompt?: string;
+  cwd?: string;
+  gitBranch?: string;
   text: string;
   error?: boolean;
 }
@@ -16,7 +19,23 @@ interface TerminalAppProps {
   windowId: string;
 }
 
-// Simple ANSI color code parser to styled HTML spans
+const INITIAL_BANNER = `Last login: Mon Sep 14 13:42:01 2026 on tty1
+Omarchy Linux 6.12.8-arch1-1-omarchy (x86_64)
+
+\x1b[38;5;48m       /\\
+\x1b[38;5;48m      /  \\         \x1b[1;38;5;48mOMARCHY LINUX 4.0\x1b[0m (Quattro)
+\x1b[38;5;45m     / /\\ \\        \x1b[38;5;245m-----------------------\x1b[0m
+\x1b[38;5;45m    / /__\\ \\       \x1b[1;38;5;45mOS:\x1b[0m Arch Linux x86_64
+\x1b[38;5;141m   / /____\\ \\      \x1b[1;38;5;45mHost:\x1b[0m Hyprland Wayland Compositor
+\x1b[38;5;141m  /_/      \\_\\     \x1b[1;38;5;141mKernel:\x1b[0m 6.12.8-arch1-1-omarchy
+\x1b[38;5;141m                   \x1b[1;38;5;141mShell:\x1b[0m zsh 5.9 (x86_64-pc-linux-gnu)
+                   \x1b[1;38;5;48mWM:\x1b[0m Hyprland v0.44.1 (Tiling BSP)
+                   \x1b[1;38;5;45mTerminal:\x1b[0m alacritty
+                   \x1b[1;38;5;141mMemory:\x1b[0m 5920MiB / 32098MiB (18%)
+
+Type 'help' for commands, 'pacman -Syu' to upgrade, or 'open <app>' to launch.
+`;
+
 function parseAnsi(text: string): React.ReactNode[] {
   const parts = text.split(/(\x1b\[[0-9;]*m)/g);
   let currentColor = "";
@@ -33,7 +52,9 @@ function parseAnsi(text: string): React.ReactNode[] {
       if (part.includes("38;5;48m")) currentColor = "text-emerald-400";
       else if (part.includes("38;5;45m")) currentColor = "text-cyan-400";
       else if (part.includes("38;5;141m")) currentColor = "text-purple-400";
-      else if (part.includes("34m")) currentColor = "text-blue-400";
+      else if (part.includes("38;5;245m")) currentColor = "text-slate-500";
+      else if (part.includes("34m")) currentColor = "text-blue-400 font-semibold";
+      else if (part.includes("33m")) currentColor = "text-amber-400 font-mono";
       else if (part.includes("31m")) currentColor = "text-rose-400";
       return null;
     }
@@ -53,6 +74,7 @@ function parseAnsi(text: string): React.ReactNode[] {
 
 export const TerminalApp: React.FC<TerminalAppProps> = () => {
   const { cwd, listDir } = useFSStore();
+  const { soundEffects } = useSystemStore();
   const interpreterRef = useRef<ShellInterpreter | null>(null);
 
   if (!interpreterRef.current) {
@@ -61,9 +83,9 @@ export const TerminalApp: React.FC<TerminalAppProps> = () => {
 
   const [lines, setLines] = useState<TerminalLine[]>([
     {
-      id: "line-welcome",
+      id: "init-1",
       type: "output",
-      text: "⚡ Omarchy Web OS 4.0 (zsh 5.9)\nType 'omafetch' for system info, or 'help' for available commands.\n",
+      text: INITIAL_BANNER,
     },
   ]);
 
@@ -72,9 +94,8 @@ export const TerminalApp: React.FC<TerminalAppProps> = () => {
   const inputRef = useRef<HTMLInputElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
-  const getPrompt = () => {
-    const displayCwd = cwd === "/home/user" ? "~" : cwd.replace("/home/user", "~");
-    return `user@omarchy:${displayCwd}$`;
+  const getDisplayCwd = (path: string) => {
+    return path === "/home/user" ? "~" : path.replace("/home/user", "~");
   };
 
   useEffect(() => {
@@ -82,9 +103,13 @@ export const TerminalApp: React.FC<TerminalAppProps> = () => {
   }, [lines]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (soundEffects && e.key.length === 1) {
+      playKeyTick();
+    }
+
     if (e.key === "Enter") {
       const cmd = inputVal;
-      const currentPrompt = getPrompt();
+      const currentCwd = cwd;
 
       if (cmd.trim() === "clear") {
         setLines([]);
@@ -98,7 +123,8 @@ export const TerminalApp: React.FC<TerminalAppProps> = () => {
         {
           id: `in-${Date.now()}`,
           type: "input",
-          prompt: currentPrompt,
+          cwd: currentCwd,
+          gitBranch: "main",
           text: cmd,
         },
       ];
@@ -147,7 +173,7 @@ export const TerminalApp: React.FC<TerminalAppProps> = () => {
 
       const files = listDir(cwd) || [];
       const matches = files
-        .map((f) => f.name)
+        .map((f) => (f.type === "dir" ? `${f.name}/` : f.name))
         .filter((name) => name.startsWith(lastWord));
 
       if (matches.length === 1) {
@@ -160,18 +186,31 @@ export const TerminalApp: React.FC<TerminalAppProps> = () => {
   return (
     <div
       onClick={() => inputRef.current?.focus()}
-      className="w-full h-full p-3 font-terminal text-xs text-slate-200 overflow-y-auto bg-black/85 select-text cursor-text"
+      className="w-full h-full p-3 font-mono-os text-xs text-slate-200 overflow-y-auto bg-[#07090f]/95 select-text cursor-text relative"
     >
+      {/* Subtle CRT scanline overlay */}
+      <div className="absolute inset-0 w-full h-full crt-scanlines pointer-events-none opacity-40" />
+
       {lines.map((line) => (
-        <div key={line.id} className="mb-1 leading-relaxed">
+        <div key={line.id} className="mb-1.5 leading-relaxed relative z-10">
           {line.type === "input" ? (
-            <div className="flex items-center space-x-2">
-              <span className="text-omarchy-accent font-bold">{line.prompt}</span>
-              <span className="text-slate-100">{line.text}</span>
+            <div>
+              {/* Starship-style two-line prompt */}
+              <div className="flex items-center space-x-1.5 text-[11px]">
+                <span className="text-slate-500">╭─</span>
+                <span className="text-emerald-400 font-semibold">user@omarchy</span>
+                <span className="text-slate-600">:</span>
+                <span className="text-cyan-400 font-medium">{getDisplayCwd(line.cwd || "/home/user")}</span>
+                <span className="text-purple-400 font-medium">({line.gitBranch || "main"})</span>
+              </div>
+              <div className="flex items-center space-x-2 pl-3">
+                <span className="text-emerald-400 font-bold">╰─❯</span>
+                <span className="text-slate-100 font-medium">{line.text}</span>
+              </div>
             </div>
           ) : (
             <div
-              className={`whitespace-pre-wrap ${
+              className={`whitespace-pre-wrap pl-3 ${
                 line.error ? "text-rose-400" : "text-slate-300"
               }`}
             >
@@ -181,19 +220,28 @@ export const TerminalApp: React.FC<TerminalAppProps> = () => {
         </div>
       ))}
 
-      {/* Input line */}
-      <div className="flex items-center space-x-2">
-        <span className="text-omarchy-accent font-bold select-none">{getPrompt()}</span>
-        <input
-          ref={inputRef}
-          type="text"
-          value={inputVal}
-          onChange={(e) => setInputVal(e.target.value)}
-          onKeyDown={handleKeyDown}
-          autoFocus
-          spellCheck={false}
-          className="flex-1 bg-transparent border-none outline-none text-slate-100 font-terminal text-xs p-0 focus:ring-0"
-        />
+      {/* Active Input Line */}
+      <div className="relative z-10">
+        <div className="flex items-center space-x-1.5 text-[11px] select-none">
+          <span className="text-slate-500">╭─</span>
+          <span className="text-emerald-400 font-semibold">user@omarchy</span>
+          <span className="text-slate-600">:</span>
+          <span className="text-cyan-400 font-medium">{getDisplayCwd(cwd)}</span>
+          <span className="text-purple-400 font-medium">(main)</span>
+        </div>
+        <div className="flex items-center space-x-2 pl-3">
+          <span className="text-emerald-400 font-bold select-none">╰─❯</span>
+          <input
+            ref={inputRef}
+            type="text"
+            value={inputVal}
+            onChange={(e) => setInputVal(e.target.value)}
+            onKeyDown={handleKeyDown}
+            autoFocus
+            spellCheck={false}
+            className="flex-1 bg-transparent border-none outline-none text-slate-100 font-mono-os text-xs p-0 focus:ring-0"
+          />
+        </div>
       </div>
 
       <div ref={bottomRef} />

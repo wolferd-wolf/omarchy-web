@@ -6,6 +6,8 @@ import { Desktop } from "@/components/wm/Desktop";
 import { CommandPalette } from "@/components/shell/CommandPalette";
 import { HotkeysModal } from "@/components/shell/HotkeysModal";
 import { useWindowStore } from "@/store/windowStore";
+import { useSystemStore } from "@/store/systemStore";
+import { playTactileClick, playWindowSwitch } from "@/core/audio/soundEffects";
 
 export default function Home() {
   const {
@@ -24,15 +26,15 @@ export default function Home() {
     windows,
   } = useWindowStore();
 
+  const { soundEffects } = useSystemStore();
   const initializedRef = useRef(false);
 
-  // Initialize startup layout (Terminal + Agent Hub tiled side by side)
+  // Initialize startup layout (Terminal + Neovim tiled side by side on Workspace 1)
   useEffect(() => {
     if (!initializedRef.current && Object.keys(windows).length === 0) {
       initializedRef.current = true;
-      // Launch initial developer apps on Workspace 1
-      openWindow("terminal", "Terminal (zsh)");
-      openWindow("agent", "Omarchy Agent ⚡");
+      openWindow("terminal", "alacritty // zsh");
+      openWindow("editor", "Neovim - main.rs", { filePath: "/home/user/projects/main.rs" });
     }
   }, [openWindow, windows]);
 
@@ -45,6 +47,7 @@ export default function Home() {
       // Super + Space or Super + D: Launcher
       if (isSuper && (e.code === "Space" || e.key.toLowerCase() === "d")) {
         e.preventDefault();
+        if (soundEffects) playTactileClick();
         setCommandPaletteOpen(!isCommandPaletteOpen);
         return;
       }
@@ -52,27 +55,31 @@ export default function Home() {
       // Super + Enter: Terminal
       if (isSuper && e.key === "Enter") {
         e.preventDefault();
-        openWindow("terminal");
+        if (soundEffects) playTactileClick();
+        openWindow("terminal", "alacritty // zsh");
         return;
       }
 
       // Super + A: Agent Hub
       if (isSuper && e.key.toLowerCase() === "a") {
         e.preventDefault();
-        openWindow("agent");
+        if (soundEffects) playTactileClick();
+        openWindow("agent", "omarchy-agent daemon");
         return;
       }
 
       // Super + E: Editor
       if (isSuper && e.key.toLowerCase() === "e") {
         e.preventDefault();
-        openWindow("editor");
+        if (soundEffects) playTactileClick();
+        openWindow("editor", "Neovim - main.rs", { filePath: "/home/user/projects/main.rs" });
         return;
       }
 
       // Super + Q: Close active window
       if (isSuper && e.key.toLowerCase() === "q") {
         e.preventDefault();
+        if (soundEffects) playTactileClick();
         if (focusedWindowId) {
           closeWindow(focusedWindowId);
         }
@@ -82,6 +89,7 @@ export default function Home() {
       // Super + F: Fullscreen / Maximize
       if (isSuper && e.key.toLowerCase() === "f") {
         e.preventDefault();
+        if (soundEffects) playTactileClick();
         if (focusedWindowId) {
           toggleMaximize(focusedWindowId);
         }
@@ -91,6 +99,7 @@ export default function Home() {
       // Super + V: Toggle Split direction
       if (isSuper && e.key.toLowerCase() === "v") {
         e.preventDefault();
+        if (soundEffects) playTactileClick();
         toggleSplitDirection();
         return;
       }
@@ -98,6 +107,7 @@ export default function Home() {
       // Super + Shift + Space: Toggle Floating
       if (isSuper && e.shiftKey && e.code === "Space") {
         e.preventDefault();
+        if (soundEffects) playTactileClick();
         if (focusedWindowId) {
           toggleFloating(focusedWindowId);
         }
@@ -107,6 +117,7 @@ export default function Home() {
       // Super + ? / / : Hotkeys modal
       if (isSuper && (e.key === "?" || e.key === "/")) {
         e.preventDefault();
+        if (soundEffects) playTactileClick();
         setHotkeysModalOpen(!isHotkeysModalOpen);
         return;
       }
@@ -114,6 +125,7 @@ export default function Home() {
       // Super + 1..5: Switch Workspace
       if (isSuper && !e.shiftKey && ["1", "2", "3", "4", "5"].includes(e.key)) {
         e.preventDefault();
+        if (soundEffects) playWindowSwitch();
         switchWorkspace(parseInt(e.key, 10));
         return;
       }
@@ -121,6 +133,7 @@ export default function Home() {
       // Super + Shift + 1..5: Move Window to Workspace
       if (isSuper && e.shiftKey && ["1", "2", "3", "4", "5"].includes(e.key)) {
         e.preventDefault();
+        if (soundEffects) playWindowSwitch();
         if (focusedWindowId) {
           moveWindowToWorkspace(focusedWindowId, parseInt(e.key, 10));
         }
@@ -134,6 +147,7 @@ export default function Home() {
     isCommandPaletteOpen,
     isHotkeysModalOpen,
     focusedWindowId,
+    soundEffects,
     openWindow,
     closeWindow,
     toggleMaximize,
@@ -146,7 +160,7 @@ export default function Home() {
   ]);
 
   return (
-    <div className="flex flex-col w-screen h-screen overflow-hidden select-none bg-omarchy-950 font-sans">
+    <div className="flex flex-col w-screen h-screen overflow-hidden select-none bg-[#06080e] font-sans">
       {/* Top Quickshell Bar */}
       <QuickShellBar />
 

@@ -8,12 +8,20 @@ export interface CommandOutput {
 }
 
 const OMARCHY_ASCII = `
-\x1b[38;5;48m   ██████╗ ███╗   ███╗ █████╗ ██████╗  ██████╗██╗  ██╗██╗   ██╗\x1b[0m
-\x1b[38;5;48m  ██╔═══██╗████╗ ████║██╔══██╗██╔══██╗██╔════╝██║  ██║╚██╗ ██╔╝\x1b[0m
-\x1b[38;5;45m  ██║   ██║██╔████╔██║███████║██████╔╝██║     ███████║ ╚████╔╝ \x1b[0m
-\x1b[38;5;45m  ██║   ██║██║╚██╔╝██║██╔══██║██╔══██╗██║     ██╔══██║  ╚██╔╝  \x1b[0m
-\x1b[38;5;141m  ╚██████╔╝██║ ╚═╝ ██║██║  ██║██║  ██║╚██████╗██║  ██║   ██║   \x1b[0m
-\x1b[38;5;141m   ╚═════╝ ╚═╝     ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝   ╚═╝   \x1b[0m
+\x1b[38;5;48m       /\\
+\x1b[38;5;48m      /  \\         \x1b[1;38;5;48mOMARCHY LINUX 4.0\x1b[0m (Quattro)
+\x1b[38;5;45m     / /\\ \\        \x1b[38;5;245m-----------------------\x1b[0m
+\x1b[38;5;45m    / /__\\ \\       \x1b[1;38;5;45mOS:\x1b[0m Arch Linux x86_64
+\x1b[38;5;141m   / /____\\ \\      \x1b[1;38;5;45mHost:\x1b[0m Hyprland Wayland Compositor
+\x1b[38;5;141m  /_/      \\_\\     \x1b[1;38;5;141mKernel:\x1b[0m 6.12.8-arch1-1-omarchy
+\x1b[38;5;141m                   \x1b[1;38;5;141mShell:\x1b[0m zsh 5.9 (x86_64-pc-linux-gnu)
+                   \x1b[1;38;5;48mWM:\x1b[0m Hyprland v0.44.1 (Tiling BSP)
+                   \x1b[1;38;5;48mTheme:\x1b[0m Omarchy Charcoal [GTK2/3]
+                   \x1b[1;38;5;45mIcons:\x1b[0m Papirus-Dark
+                   \x1b[1;38;5;45mTerminal:\x1b[0m alacritty
+                   \x1b[1;38;5;141mCPU:\x1b[0m AMD Ryzen 9 7950X (32) @ 5.700GHz
+                   \x1b[1;38;5;141mMemory:\x1b[0m 5920MiB / 32098MiB (18%)
+                   \x1b[1;38;5;48mDisk (/):\x1b[0m 64G / 512G (13%)
 `;
 
 export class ShellInterpreter {
@@ -29,7 +37,7 @@ export class ShellInterpreter {
 
     this.history.push(trimmed);
 
-    // Check for redirection: cmd > file or cmd >> file
+    // File Redirection (> and >>)
     let targetFile = "";
     let append = false;
     let actualCommand = trimmed;
@@ -94,28 +102,217 @@ export class ShellInterpreter {
     switch (cmd) {
       case "help":
         return {
-          output: `⚡ Omarchy Web OS Shell Built-in Commands:
-  ls [-l|-a] [path]  - List files and directories
-  cd [path]          - Change working directory
+          output: `\x1b[1;38;5;48mOmarchy GNU/Linux 6.12 Utilities:\x1b[0m
+  ls [-la] [path]    - List directory contents with permissions
+  cd [dir]           - Change directory
   pwd                - Print current working directory
-  cat [file]         - Display contents of a file
-  echo [text]        - Print text (supports > and >> file redirection)
-  mkdir [-p] [dir]   - Create a new directory
-  rm [-r] [path]     - Remove a file or directory
-  touch [file]       - Create an empty file
+  cat [file]         - Concatenate and display files
+  echo [text]        - Write text (supports > and >> file redirection)
+  mkdir [-p] [dir]   - Create directories
+  rm [-r] [file/dir] - Remove files or directories
+  touch [file]       - Create empty file or update timestamp
   grep [pat] [file]  - Search for pattern in file
-  omafetch           - System & environment status report
-  open [app]         - Open app: terminal, agent, editor, files, monitor, v86, settings
-  agent [prompt]     - Send a direct instruction to the Omarchy AI Agent
-  clear              - Clear terminal window
+  tree [dir]         - Display directory tree visualization
+  omafetch           - Print system hardware and OS status
+  open [app]         - Launch: terminal, agent, editor, files, monitor, v86, settings
+  git [status|log]   - Check git version control
+  pacman [-Syu|-Ss]  - Arch Linux package manager
+  hyprctl [mon|cl]   - Hyprland compositor controller
+  cargo [run|build]  - Rust package manager
+  python3 [script]   - Execute python script
+  node [script]      - Execute JavaScript script
+  free [-h]          - Display memory usage summary
+  df [-h]            - Display file system disk space usage
+  uptime             - Show how long the system has been running
+  whoami             - Print current logged-in user
   uname -a           - Print kernel system architecture
-  history            - Show command history
-  date               - Print current date and time
+  ps [aux]           - Report a snapshot of the current processes
+  clear              - Clear the terminal screen
+  history            - Show shell history
 `,
         };
 
       case "pwd":
         return { output: fs.cwd };
+
+      case "whoami":
+        return { output: "user" };
+
+      case "uptime":
+        return { output: " 14:10:02 up 14 days,  3:47,  1 user,  load average: 0.14, 0.19, 0.22" };
+
+      case "free":
+        return {
+          output: `               total        used        free      shared  buff/cache   available
+Mem:           31.3G        5.9G       18.3G        420M        7.1G       25.0G
+Swap:           8.0G          0B        8.0G`,
+        };
+
+      case "df":
+        return {
+          output: `Filesystem      Size  Used Avail Use% Mounted on
+dev             16G     0   16G   0% /dev
+run             16G  1.8M   16G   1% /run
+/dev/nvme0n1p2 512G   64G  448G  13% /
+tmpfs           16G  420M   16G   3% /dev/shm
+/dev/nvme0n1p1 1.0G   72M  952M   8% /boot/efi`,
+        };
+
+      case "ps":
+        return {
+          output: `USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+root         1  0.0  0.0 168432 12420 ?        Ss   Sep01   0:04 /sbin/init
+user       104  1.8  0.4 482912 82500 tty1     Ssl+ Sep01  42:15 Hyprland
+user       142  0.9  0.2 284120 45100 tty1     Sl   Sep01  18:32 quickshell --ipc
+user       210  2.4  0.6 592810 128000 tty1    Sl   Sep01  54:10 omarchy-agent daemon
+user       312  0.2  0.1 192840 28300 ?        S<l  Sep01   4:12 pipewire
+user       489  0.0  0.1  24892 12000 pts/0    Ss   13:40   0:00 /bin/zsh`,
+        };
+
+      case "git": {
+        const sub = args[0] || "status";
+        if (sub === "status") {
+          return {
+            output: `On branch main
+Your branch is up to date with 'origin/main'.
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+	modified:   .config/hypr/hyprland.conf
+	modified:   projects/main.rs
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+	notes/todo.txt
+
+no changes added to commit (use "git add" and/or "git commit -a")`,
+          };
+        }
+        if (sub === "log") {
+          return {
+            output: `\x1b[33mcommit 9f82d14a2b91c841e\x1b[0m (HEAD -> main, origin/main)
+Author: user <user@omarchy.org>
+Date:   Mon Sep 14 13:30:12 2026 +0000
+
+    feat(hyprland): configure binary-split compositor and quickshell modules
+
+\x1b[33mcommit 4a71c8901be33d59a\x1b[0m
+Author: user <user@omarchy.org>
+Date:   Mon Sep 14 11:15:44 2026 +0000
+
+    feat(agent): initialize autonomous loop daemon with virtual disk IPC
+
+\x1b[33mcommit 1b02f948a329d44ef\x1b[0m
+Author: user <user@omarchy.org>
+Date:   Mon Sep 14 09:00:00 2026 +0000
+
+    init: bootstrap Omarchy Web OS 4.0 (Quattro)`,
+          };
+        }
+        if (sub === "branch") {
+          return { output: "* main" };
+        }
+        return { output: `git: '${sub}' is not a valid git command. Try 'git status' or 'git log'.` };
+      }
+
+      case "pacman": {
+        const flag = args[0];
+        if (flag === "-Syu" || flag === "-Syyu") {
+          return {
+            output: `:: Synchronizing package databases...
+ core                                                 148.2 KiB   1.8 MiB/s 00:00 [#############################################] 100%
+ extra                                                  8.6 MiB  14.2 MiB/s 00:01 [#############################################] 100%
+ multilib                                             142.0 KiB   2.1 MiB/s 00:00 [#############################################] 100%
+:: Starting full system upgrade...
+ there is nothing to do`,
+          };
+        }
+        if (flag === "-Ss") {
+          const query = args[1] || "";
+          return {
+            output: `extra/hyprland 0.44.1-1 [installed]
+    A dynamic tiling Wayland compositor that doesn't sacrifice on its looks
+extra/quickshell 0.0.8-1 [installed]
+    Flexible desktop shell library built with Qt/QML
+extra/alacritty 0.13.2-1 [installed]
+    A cross-platform, GPU-accelerated terminal emulator
+extra/neovim 0.10.1-1 [installed]
+    Vim-fork focused on extensibility and usability`,
+          };
+        }
+        return { output: "usage: pacman <operation> [...] (e.g. pacman -Syu, pacman -Ss <package>)" };
+      }
+
+      case "hyprctl": {
+        const sub = args[0];
+        if (sub === "monitors" || sub === "mon") {
+          return {
+            output: `Monitor DP-1 (ID 0):
+	2560x1440@165.00Hz at 0x0
+	description: ASUS ROG Swift PG279QM
+	make: ASUS
+	model: PG279QM
+	focused: yes
+	active workspace: ${wm.activeWorkspaceId}
+	reserved: 0 36 0 0`,
+          };
+        }
+        if (sub === "clients" || sub === "cl") {
+          const clientList = Object.values(wm.windows)
+            .map(
+              (w) =>
+                `Window ${w.id} -> class: ${w.appId}, title: ${w.title}, workspace: ${w.workspaceId}, floating: ${w.isFloating ? 1 : 0}`
+            )
+            .join("\n");
+          return { output: clientList || "No active clients on current workspace." };
+        }
+        return { output: `Hyprland, built from branch main at commit 9b81d7f (v0.44.1)\nCommands: hyprctl monitors, hyprctl clients` };
+      }
+
+      case "cargo": {
+        const sub = args[0] || "build";
+        if (sub === "run") {
+          return {
+            output: `   Compiling omarchy-kernel v0.1.0 (/home/user/projects)
+    Finished dev [unoptimized + debuginfo] target(s) in 0.38s
+     Running \`target/debug/omarchy-kernel\`
+⚡ Omarchy Linux 4.0 (Quattro) Initialized
+Active daemons: {
+    104: Process { pid: 104, name: "hyprland", threads: 4 },
+    210: Process { pid: 210, name: "omarchy-agent", threads: 8 },
+}`,
+          };
+        }
+        return {
+          output: `   Compiling omarchy-kernel v0.1.0 (/home/user/projects)
+    Finished dev [unoptimized + debuginfo] target(s) in 0.35s`,
+        };
+      }
+
+      case "python3":
+      case "python": {
+        const script = args[0];
+        if (script?.includes("agent")) {
+          return {
+            output: `[Agent] Initializing autonomous loop...
+[Agent] Connecting to Quickshell IPC socket...
+[Agent] Status: 100% operational in browser.`,
+          };
+        }
+        return { output: `Python 3.12.5 (main, Aug 12 2026, 14:20:00) [GCC 14.2.1 20260801] on linux` };
+      }
+
+      case "node": {
+        const script = args[0];
+        if (script?.includes("demo")) {
+          return {
+            output: `⚡ Bootstrapping agent workspace...
+Connected to compositor bus.
+Status: ready, model: hyprland-tiling, kernel: v86-wasm`,
+          };
+        }
+        return { output: `Welcome to Node.js v24.2.0. Type ".help" for more information.` };
+      }
 
       case "cd": {
         const target = args[0] || "/home/user";
@@ -154,20 +351,48 @@ export class ShellInterpreter {
         const filtered = showAll ? entries : entries.filter((e) => !e.name.startsWith("."));
 
         if (isLong) {
-          const lines = filtered.map((e) => {
+          const totalBlocks = Math.ceil(filtered.reduce((acc, e) => acc + e.size, 0) / 1024);
+          const lines = [`total ${totalBlocks}`];
+          filtered.forEach((e) => {
             const typeChar = e.type === "dir" ? "d" : "-";
             const perms = `${typeChar}rwxr-xr-x`;
-            const dateStr = new Date(e.modified).toLocaleDateString([], { month: "short", day: "numeric" });
-            const coloredName = e.type === "dir" ? `\x1b[34m${e.name}/\x1b[0m` : e.name;
-            return `${perms}  user  users  ${e.size.toString().padStart(5)}  ${dateStr}  ${coloredName}`;
+            const dateStr = new Date(e.modified).toLocaleDateString("en-US", { month: "short", day: "2-digit" });
+            const coloredName = e.type === "dir" ? `\x1b[1;34m${e.name}/\x1b[0m` : e.name;
+            lines.push(`${perms}  1 user users  ${e.size.toString().padStart(6)}  ${dateStr}  ${coloredName}`);
           });
           return { output: lines.join("\n") };
         }
 
         const formatted = filtered
-          .map((e) => (e.type === "dir" ? `${e.name}/` : e.name))
+          .map((e) => (e.type === "dir" ? `\x1b[1;34m${e.name}/\x1b[0m` : e.name))
           .join("  ");
         return { output: formatted };
+      }
+
+      case "tree": {
+        const startPath = args[0] ? fs.resolvePath(args[0]) : fs.cwd;
+        const rootNode = fs.getNode(startPath);
+        if (!rootNode || rootNode.type !== "dir") {
+          return { output: `tree: '${startPath}': No such directory`, error: true };
+        }
+
+        const outputLines = [startPath];
+        const walk = (path: string, prefix: string) => {
+          const items = fs.listDir(path) || [];
+          items.forEach((item, index) => {
+            const isLast = index === items.length - 1;
+            const branch = isLast ? "└── " : "├── ";
+            const nextPrefix = prefix + (isLast ? "    " : "│   ");
+            const colored = item.type === "dir" ? `\x1b[1;34m${item.name}\x1b[0m` : item.name;
+            outputLines.push(`${prefix}${branch}${colored}`);
+            if (item.type === "dir") {
+              walk(`${path === "/" ? "" : path}/${item.name}`, nextPrefix);
+            }
+          });
+        };
+
+        walk(startPath, "");
+        return { output: outputLines.join("\n") };
       }
 
       case "cat": {
@@ -230,20 +455,7 @@ export class ShellInterpreter {
 
       case "omafetch":
       case "neofetch":
-        return {
-          output: `${OMARCHY_ASCII}
-  \x1b[1;38;5;48mOS:\x1b[0m Omarchy Web OS 4.0 (Quattro) x86_64
-  \x1b[1;38;5;48mHost:\x1b[0m WebAssembly / Browser VFS
-  \x1b[1;38;5;48mKernel:\x1b[0m 6.12.0-omarchy-v86
-  \x1b[1;38;5;45mUptime:\x1b[0m 42 mins
-  \x1b[1;38;5;45mShell:\x1b[0m zsh 5.9
-  \x1b[1;38;5;45mWM:\x1b[0m Hyprland (Tiling Wayland Compositor)
-  \x1b[1;38;5;141mDesktop:\x1b[0m Quickshell IPC unified
-  \x1b[1;38;5;141mTerminal:\x1b[0m omarchy-term
-  \x1b[1;38;5;141mAgent:\x1b[0m Omarchy Autonomous Coding Agent (Online)
-  \x1b[1;38;5;48mMemory:\x1b[0m 38% / 16384MB
-`,
-        };
+        return { output: OMARCHY_ASCII };
 
       case "open": {
         if (args.length === 0) return { output: "open: specify an app (terminal, agent, editor, files, monitor, v86, settings)", error: true };
@@ -253,14 +465,14 @@ export class ShellInterpreter {
           return { output: `open: unknown app '${args[0]}'. Valid apps: ${validApps.join(", ")}`, error: true };
         }
         wm.openWindow(app);
-        return { output: `Opened ${app} in active workspace.` };
+        return { output: `Launched ${app} on workspace ${wm.activeWorkspaceId}.` };
       }
 
       case "uname":
-        return { output: "Linux omarchy 6.12.0-omarchy #1 SMP PREEMPT_DYNAMIC WebAssembly x86_64 GNU/Linux" };
+        return { output: "Linux omarchy 6.12.8-arch1-1-omarchy #1 SMP PREEMPT_DYNAMIC Wed, 14 Sep 2026 04:12:00 +0000 x86_64 GNU/Linux" };
 
       case "date":
-        return { output: new Date().toString() };
+        return { output: new Date().toUTCString() };
 
       case "history":
         return { output: this.history.map((h, i) => `${(i + 1).toString().padStart(4)}  ${h}`).join("\n") };

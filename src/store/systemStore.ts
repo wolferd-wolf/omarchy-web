@@ -8,6 +8,8 @@ interface SystemState {
   batteryLevel: number;
   isMuted: boolean;
   volume: number;
+  soundEffects: boolean;
+  activeWindowName: string;
   processes: VirtualProcess[];
   notifications: SystemNotification[];
 
@@ -15,6 +17,8 @@ interface SystemState {
   setTheme: (theme: ThemeId) => void;
   setVolume: (vol: number) => void;
   toggleMute: () => void;
+  toggleSoundEffects: () => void;
+  setActiveWindowName: (name: string) => void;
   addNotification: (title: string, message: string, type?: SystemNotification["type"]) => void;
   dismissNotification: (id: string) => void;
   updateMetrics: () => void;
@@ -36,6 +40,8 @@ export const useSystemStore = create<SystemState>((set, get) => ({
   batteryLevel: 94,
   isMuted: false,
   volume: 80,
+  soundEffects: true,
+  activeWindowName: "alacritty: ~/projects",
   processes: DEFAULT_PROCESSES,
   notifications: [
     {
@@ -56,6 +62,8 @@ export const useSystemStore = create<SystemState>((set, get) => ({
 
   setVolume: (vol) => set({ volume: vol, isMuted: vol === 0 }),
   toggleMute: () => set((state) => ({ isMuted: !state.isMuted })),
+  toggleSoundEffects: () => set((state) => ({ soundEffects: !state.soundEffects })),
+  setActiveWindowName: (name) => set({ activeWindowName: name }),
 
   addNotification: (title, message, type = "info") => {
     const notif: SystemNotification = {
@@ -73,7 +81,6 @@ export const useSystemStore = create<SystemState>((set, get) => ({
   },
 
   updateMetrics: () => {
-    // Dynamic simulated realistic jitter
     const cpuJitter = Math.floor(8 + Math.random() * 22);
     const memJitter = Math.floor(35 + Math.random() * 6);
     set({ cpuUsage: cpuJitter, memoryUsage: memJitter });
