@@ -115,9 +115,19 @@ export class ShellInterpreter {
   grep [pat] [file]  - Search for pattern in file
   tree [dir]         - Display directory tree visualization
   omafetch           - Print system hardware and OS status
-  open [app]         - Launch: terminal, agent, editor, files, monitor, v86, settings
+  open [app]         - Launch: terminal, browser, player, calc, doom, paint, files, v86...
+  pacman -S <pkg>    - Install packages / desktop apps (or pacman -Ss <query>)
+  yay -S <pkg>       - Arch Linux & AUR package installer
+  pkg install <app>  - Omarchy package manager (pkg list | pkg install)
+  curl [-O] <url>    - Download web resources and save files
+  wget <url>         - Download files to current working directory
+  npm / pip install  - Node.js and Python package installers
+  lock               - Lock the desktop session (Super+L)
+  screenshot         - Capture screenshot (Super+Shift+S)
+  cowsay [msg]       - Talking ASCII cow
+  figlet [text]      - ASCII banner generator
+  cmatrix            - Matrix digital rain stream
   git [status|log]   - Check git version control
-  pacman [-Syu|-Ss]  - Arch Linux package manager
   hyprctl [mon|cl]   - Hyprland compositor controller
   cargo [run|build]  - Rust package manager
   python3 [script]   - Execute python script
@@ -216,33 +226,351 @@ Date:   Mon Sep 14 09:00:00 2026 +0000
         return { output: `git: '${sub}' is not a valid git command. Try 'git status' or 'git log'.` };
       }
 
-      case "pacman": {
+      case "pacman":
+      case "yay":
+      case "paru": {
         const flag = args[0];
-        if (flag === "-Syu" || flag === "-Syyu") {
-          return {
-            output: `:: Synchronizing package databases...
+        if (!flag) {
+          return { output: "usage: pacman <operation> [...] (e.g. pacman -Syu, pacman -Ss <query>, pacman -S <package>)" };
+        }
+
+        if (flag === "-Syu" || flag === "-Syyu" || flag === "-Sy") {
+          if (args.length === 1) {
+            return {
+              output: `:: Synchronizing package databases...
  core                                                 148.2 KiB   1.8 MiB/s 00:00 [#############################################] 100%
  extra                                                  8.6 MiB  14.2 MiB/s 00:01 [#############################################] 100%
  multilib                                             142.0 KiB   2.1 MiB/s 00:00 [#############################################] 100%
 :: Starting full system upgrade...
  there is nothing to do`,
-          };
+            };
+          }
         }
+
+        if (flag.startsWith("-S") && flag !== "-Ss") {
+          const targets = args.slice(1).filter((a) => !a.startsWith("-"));
+          if (targets.length === 0) {
+            return { output: "error: no targets specified (use -h for help)", error: true };
+          }
+
+          const results: string[] = [];
+          for (const rawPkg of targets) {
+            const pkg = rawPkg.toLowerCase();
+            const appAliases: Record<string, AppId> = {
+              browser: "browser",
+              web: "browser",
+              zen: "browser",
+              chromium: "browser",
+              firefox: "browser",
+              player: "player",
+              music: "player",
+              spotify: "player",
+              audio: "player",
+              calc: "calculator",
+              calculator: "calculator",
+              kcalc: "calculator",
+              bc: "calculator",
+              doom: "doom",
+              game: "doom",
+              paint: "paint",
+              draw: "paint",
+              gimp: "paint",
+              v86: "v86",
+              vm: "v86",
+              alpine: "v86",
+              files: "files",
+              yazi: "files",
+              thunar: "files",
+              editor: "editor",
+              nvim: "editor",
+              neovim: "editor",
+              vim: "editor",
+              monitor: "monitor",
+              btop: "monitor",
+              htop: "monitor",
+              settings: "settings",
+              agent: "agent",
+              terminal: "terminal",
+              alacritty: "terminal",
+            };
+
+            const appId = appAliases[pkg];
+            if (appId) {
+              wm.openWindow(appId);
+              fs.writeFile(`/usr/bin/${pkg}`, `#!/bin/sh\n# Omarchy Desktop Application launcher\nopen ${appId}\n`);
+              fs.writeFile(`/usr/share/applications/${pkg}.desktop`, `[Desktop Entry]\nName=${pkg}\nType=Application\nExec=open ${appId}\nIcon=${pkg}\n`);
+              results.push(`resolving dependencies...
+looking for conflicting packages...
+
+Packages (1) ${pkg}-4.0.1-1
+
+Total Download Size:    4.18 MiB
+Total Installed Size:  14.20 MiB
+
+:: Proceed with installation? [Y/n] Y
+:: Retrieving packages...
+ ${pkg}-4.0.1-1-x86_64     4.2 MiB  12.8 MiB/s 00:00 [####################################] 100%
+(1/1) checking keys in keyring                      [####################################] 100%
+(1/1) checking package integrity                    [####################################] 100%
+(1/1) loading package files                         [####################################] 100%
+(1/1) checking for file conflicts                   [####################################] 100%
+(1/1) checking available disk space                 [####################################] 100%
+:: Processing package changes...
+(1/1) installing ${pkg}                             [####################################] 100%
+:: Running post-transaction hooks...
+(1/2) Arming ConditionNeedsUpdate...
+(2/2) Updating desktop database...
+\x1b[1;38;5;48m✔ Package '${pkg}' installed and launched on workspace ${wm.activeWorkspaceId}!\x1b[0m`);
+            } else {
+              fs.writeFile(`/usr/bin/${pkg}`, `#!/bin/sh\n# ${pkg} binary\necho "${pkg} v1.0.0 (omarchy-x86_64)"\n`);
+              results.push(`resolving dependencies...
+looking for conflicting packages...
+
+Packages (1) ${pkg}-1.0.0-1
+
+Total Download Size:    1.25 MiB
+Total Installed Size:   3.90 MiB
+
+:: Proceed with installation? [Y/n] Y
+:: Retrieving packages...
+ ${pkg}-1.0.0-1-x86_64     1.3 MiB  18.4 MiB/s 00:00 [####################################] 100%
+(1/1) checking keys in keyring                      [####################################] 100%
+(1/1) checking package integrity                    [####################################] 100%
+(1/1) loading package files                         [####################################] 100%
+:: Processing package changes...
+(1/1) installing ${pkg}                             [####################################] 100%
+:: Running post-transaction hooks...
+(1/2) Arming ConditionNeedsUpdate...
+\x1b[1;38;5;48m✔ Installed ${pkg} into /usr/bin/${pkg}. You can now run '${pkg}'.\x1b[0m`);
+            }
+          }
+          return { output: results.join("\n\n") };
+        }
+
         if (flag === "-Ss") {
-          const query = args[1] || "";
+          const query = (args[1] || "").toLowerCase();
+          const allPackages = [
+            { repo: "extra", name: "browser", desc: "Zen Web Browser with tabbed sandboxed browsing" },
+            { repo: "extra", name: "player", desc: "Lo-Fi Audio Station & real-time Web Audio spectrum visualizer" },
+            { repo: "extra", name: "calculator", desc: "Programmer & Scientific calculator (HEX, DEC, BIN, OCT)" },
+            { repo: "extra", name: "doom", desc: "Retro WASM 3D Arena (Doom raycaster game)" },
+            { repo: "extra", name: "paint", desc: "Pixel Art Studio drawing canvas" },
+            { repo: "extra", name: "hyprland", desc: "Dynamic tiling Wayland compositor" },
+            { repo: "extra", name: "quickshell", desc: "Flexible desktop shell library built with Qt/QML" },
+            { repo: "extra", name: "alacritty", desc: "Cross-platform, GPU-accelerated terminal emulator" },
+            { repo: "extra", name: "neovim", desc: "Vim-fork focused on extensibility and usability" },
+            { repo: "extra", name: "v86", desc: "Real x86 Linux 32-bit WebAssembly kernel (Alpine 3.19)" },
+            { repo: "extra", name: "cowsay", desc: "Configurable talking cow (and a bit more)" },
+            { repo: "extra", name: "fastfetch", desc: "Neofetch-like tool for fetching system information" },
+            { repo: "extra", name: "curl", desc: "Command line tool and library for transferring data with URLs" },
+            { repo: "extra", name: "wget", desc: "Utility for retrieving files using HTTP, HTTPS and FTP" },
+          ];
+          const matched = allPackages.filter((p) => !query || p.name.includes(query) || p.desc.toLowerCase().includes(query));
+          if (matched.length === 0) {
+            return { output: `error: no matches found for '${query}'` };
+          }
           return {
-            output: `extra/hyprland 0.44.1-1 [installed]
-    A dynamic tiling Wayland compositor that doesn't sacrifice on its looks
-extra/quickshell 0.0.8-1 [installed]
-    Flexible desktop shell library built with Qt/QML
-extra/alacritty 0.13.2-1 [installed]
-    A cross-platform, GPU-accelerated terminal emulator
-extra/neovim 0.10.1-1 [installed]
-    Vim-fork focused on extensibility and usability`,
+            output: matched.map((p) => `\x1b[1;38;5;141m${p.repo}/${p.name}\x1b[0m [available]\n    ${p.desc}`).join("\n"),
           };
         }
-        return { output: "usage: pacman <operation> [...] (e.g. pacman -Syu, pacman -Ss <package>)" };
+
+        if (flag === "-Q" || flag === "-Qe") {
+          return {
+            output: `alacritty 0.13.2-1
+browser 1.0.0-1
+calculator 1.0.0-1
+doom 1.0.0-1
+editor 0.10.1-1
+files 0.2.4-1
+hyprland 0.44.1-1
+monitor 1.3.2-1
+paint 1.0.0-1
+player 1.0.0-1
+quickshell 0.0.8-1
+v86 1.0.0-1`,
+          };
+        }
+
+        if (flag === "-R" || flag === "-Rns") {
+          const target = args[1];
+          if (!target) return { output: "error: no targets specified", error: true };
+          return {
+            output: `checking dependencies...
+:: Do you want to remove these packages? [Y/n] Y
+:: Processing package changes...
+(1/1) removing ${target}                            [####################################] 100%
+:: Running post-transaction hooks...
+(1/1) Arming ConditionNeedsUpdate...
+✔ Package '${target}' removed.`,
+          };
+        }
+
+        return { output: "usage: pacman <operation> [...] (e.g. pacman -Syu, pacman -Ss <package>, pacman -S <package>)" };
       }
+
+      case "curl": {
+        if (args.length === 0) {
+          return { output: "curl: try 'curl --help' or 'curl --manual' for more information", error: true };
+        }
+        let saveToFile = false;
+        let customFilename = "";
+        let url = "";
+
+        for (let i = 0; i < args.length; i++) {
+          const arg = args[i];
+          if (arg === "-O") {
+            saveToFile = true;
+          } else if (arg === "-o" && args[i + 1]) {
+            customFilename = args[i + 1];
+            i++;
+          } else if (!arg.startsWith("-")) {
+            url = arg;
+          }
+        }
+
+        if (!url) return { output: "curl: no URL specified!", error: true };
+
+        const filename = customFilename || url.split("/").pop() || "index.html";
+        const content = `<!DOCTYPE html>\n<!-- Downloaded via curl from ${url} on ${new Date().toISOString()} -->\n<html>\n<head><title>Downloaded Resource</title></head>\n<body>\n<h1>Resource: ${url}</h1>\n<p>Content retrieved successfully by Omarchy GNU/Linux curl utility.</p>\n</body>\n</html>\n`;
+
+        if (saveToFile || customFilename) {
+          const abs = fs.resolvePath(filename);
+          fs.writeFile(abs, content);
+          return {
+            output: `  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100  1248  100  1248    0     0   428k      0 --:--:-- --:--:-- --:--:--  428k
+\x1b[1;38;5;48m✔ Saved to '${filename}' (${abs})\x1b[0m`,
+          };
+        }
+
+        return {
+          output: `HTTP/2 200 OK
+date: ${new Date().toUTCString()}
+content-type: text/plain; charset=utf-8
+server: cloudflare
+
+${content}`,
+        };
+      }
+
+      case "wget": {
+        if (args.length === 0) {
+          return { output: "wget: missing URL\nUsage: wget [OPTION]... [URL]...", error: true };
+        }
+        let url = "";
+        let outputName = "";
+        for (let i = 0; i < args.length; i++) {
+          if (args[i] === "-O" && args[i + 1]) {
+            outputName = args[i + 1];
+            i++;
+          } else if (!args[i].startsWith("-")) {
+            url = args[i];
+          }
+        }
+        if (!url) return { output: "wget: missing URL", error: true };
+        const filename = outputName || url.split("/").pop() || "downloaded_file";
+        const domain = url.replace(/https?:\/\//, "").split("/")[0] || "omarchy.org";
+        const content = `# Downloaded file from ${url}\n# Date: ${new Date().toISOString()}\n[omarchy-data]\nstatus=complete\nsource=${url}\n`;
+        const abs = fs.resolvePath(filename);
+        fs.writeFile(abs, content);
+
+        return {
+          output: `--${new Date().toISOString().replace("T", " ").substring(0, 19)}--  ${url}
+Resolving ${domain} (${domain})... 104.21.72.19, 172.67.182.14
+Connecting to ${domain} (${domain})|104.21.72.19|:443... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 2048 (2.0K) [text/plain]
+Saving to: ‘${filename}’
+
+${filename.padEnd(20)} 100%[===================>]   2.00K  --.-KB/s    in 0.001s  
+
+${new Date().toISOString().replace("T", " ").substring(0, 19)} (2.00 MB/s) - ‘${filename}’ saved [2048/2048]`,
+        };
+      }
+
+      case "npm":
+      case "npx": {
+        const sub = args[0];
+        if (sub === "install" || sub === "i" || sub === "add") {
+          const pkg = args[1] || "dependencies";
+          return {
+            output: `added 42 packages, and audited 180 packages in 1s
+
+24 packages are looking for funding
+  run \`npm fund\` for details
+
+\x1b[1;38;5;48m✔ Successfully installed '${pkg}' to node_modules/!\x1b[0m`,
+          };
+        }
+        return { output: `npm v10.8.2\nUsage: npm install <package>` };
+      }
+
+      case "pip":
+      case "pip3": {
+        const sub = args[0];
+        if (sub === "install") {
+          const pkg = args[1] || "requirements";
+          return {
+            output: `Collecting ${pkg}
+  Downloading ${pkg}-2.4.0-py3-none-any.whl (48 kB)
+Installing collected packages: ${pkg}
+\x1b[1;38;5;48mSuccessfully installed ${pkg}-2.4.0\x1b[0m`,
+          };
+        }
+        return { output: `pip 24.1.2 from /usr/lib/python3.12/site-packages/pip (python 3.12)\nUsage: pip install <package>` };
+      }
+
+      case "apk": {
+        const sub = args[0];
+        if (sub === "add") {
+          const pkg = args[1] || "package";
+          return {
+            output: `(1/2) Installing ${pkg} (1.4.0-r1)
+(2/2) Installing ${pkg}-doc (1.4.0-r1)
+Executing busybox-1.36.1-r19.trigger
+OK: 284 MiB in 62 packages
+
+\x1b[1;38;5;45m💡 Tip: To run real x86 Linux with official live Alpine package mirrors, launch the real VM with 'open v86'!\x1b[0m`,
+          };
+        }
+        return { output: "apk-tools 2.14.0, compiled for x86_64.\nUsage: apk add <package>" };
+      }
+
+      case "cowsay": {
+        const msg = args.length > 0 ? args.join(" ") : "Omarchy Linux rules!";
+        const border = "-".repeat(msg.length + 2);
+        return {
+          output: ` ${border}
+< ${msg} >
+ ${border}
+        \\   ^__^
+         \\  (oo)\\_______
+            (__)\\       )\\/\\
+                ||----w |
+                ||     ||`,
+        };
+      }
+
+      case "figlet": {
+        const text = (args.length > 0 ? args.join(" ") : "OMARCHY").toUpperCase();
+        return {
+          output: `\x1b[1;38;5;48m _ _ _  \n| | | | \n| | | |  ${text}\n|_____| \x1b[0m`,
+        };
+      }
+
+      case "fastfetch":
+        return { output: OMARCHY_ASCII };
+
+      case "cmatrix":
+        return {
+          output: `\x1b[32m0 1 0 1 1 0 1 0 0 1 0 1
+1 0 1 0 0 1 0 1 1 0 1 0
+0 1 1 0 1 0 0 1 0 1 0 1
+1 0 0 1 0 1 1 0 1 0 1 0
+0 1 0 1 1 0 1 0 0 1 0 1
+1 0 1 0 0 1 0 1 1 0 1 0\x1b[0m\n[Matrix stream rendered. Type Enter to return.]`,
+        };
 
       case "hyprctl": {
         const sub = args[0];
